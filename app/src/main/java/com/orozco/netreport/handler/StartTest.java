@@ -9,7 +9,6 @@ import rx.Observable;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
- *
  */
 
 public class StartTest {
