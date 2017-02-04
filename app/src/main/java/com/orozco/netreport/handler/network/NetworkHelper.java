@@ -22,4 +22,12 @@ public class NetworkHelper {
 
         return Observable.just(list[r.nextInt(list.length)]);
     }
+
+    public Observable<String> retrieveNetworkCarrier() {
+
+        String[] list = {"SMART", "GLOBE"};
+        Random r = new Random();
+
+        return Observable.just(list[r.nextInt(list.length)]);
+    }
 }
