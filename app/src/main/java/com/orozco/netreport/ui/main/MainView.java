@@ -5,9 +5,15 @@ import android.util.AttributeSet;
 import android.widget.Button;
 
 import com.orozco.netreport.R;
+import com.orozco.netreport.post.api.ApiUtils;
 import com.orozco.netreport.ui.BaseView;
 
 import butterknife.BindView;
+import butterknife.OnClick;
+import okhttp3.ResponseBody;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.

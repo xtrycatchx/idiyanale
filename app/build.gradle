@@ -34,6 +34,13 @@ dependencies {
     compile 'com.android.support:design:25.0.0'
 
     compile 'com.google.android.gms:play-services:8.1.0'
+    compile 'com.facebook.network.connectionclass:connectionclass:1.0.1'
+
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
+
+    compile 'com.google.code.gson:gson:2.6.1'
+    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
 
     apt 'com.google.dagger:dagger-compiler:2.7'
     compile 'com.google.dagger:dagger:2.7'
