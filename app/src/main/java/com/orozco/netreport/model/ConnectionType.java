@@ -1,9 +1,0 @@
-package com.orozco.netreport.model;
-
-/**
- * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
- */
-
-public enum ConnectionType {
-    THREE_G, FIVE_G, LTE, WIFI, UNKNOWN;
-}

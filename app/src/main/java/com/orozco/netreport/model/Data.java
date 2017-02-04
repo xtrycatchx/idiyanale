@@ -1,5 +1,8 @@
 package com.orozco.netreport.model;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Date;
 
 /**
@@ -8,15 +11,37 @@ import java.util.Date;
 
 public class Data {
 
+    @SerializedName("imei")
+    @Expose
     private String imei;
+
+    @SerializedName("carrier")
+    @Expose
     private String carrier;
+
+    @SerializedName("phone")
+    @Expose
     private String phoneModel;
+
+    @SerializedName("os")
+    @Expose
     private String oSversion;
+
+    @SerializedName("date")
+    @Expose
     private Date date;
+
+    @SerializedName("coordinates")
+    @Expose
     private Coordinates coordinates;
-    private Signal signal;
-    private int bandwithSpeed;
-    private ConnectionType conenctionType;
+
+    @SerializedName("signal")
+    @Expose
+    private String signal;
+
+    @SerializedName("connection")
+    @Expose
+    private String connection;
 
     public String getImei() {
         return imei;
@@ -66,27 +91,19 @@ public class Data {
         this.coordinates = coordinates;
     }
 
-    public Signal getSignal() {
+    public String getSignal() {
         return signal;
     }
 
-    public void setSignal(Signal signal) {
+    public void setSignal(String signal) {
         this.signal = signal;
     }
 
-    public int getBandwithSpeed() {
-        return bandwithSpeed;
+    public String getConnection() {
+        return connection;
     }
 
-    public void setBandwithSpeed(int bandwithSpeed) {
-        this.bandwithSpeed = bandwithSpeed;
-    }
-
-    public ConnectionType getConenctionType() {
-        return conenctionType;
-    }
-
-    public void setConenctionType(ConnectionType conenctionType) {
-        this.conenctionType = conenctionType;
+    public void setConnection(String connection) {
+        this.connection = connection;
     }
 }

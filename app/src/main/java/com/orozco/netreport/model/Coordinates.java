@@ -1,19 +1,28 @@
 package com.orozco.netreport.model;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
  */
 
 public class Coordinates {
-    private double lattitude;
+
+    @SerializedName("latitude")
+    @Expose
+    private double latitude;
+
+    @SerializedName("longitude")
+    @Expose
     private double longitude;
 
-    public double getLattitude() {
-        return lattitude;
+    public double getLatitude() {
+        return latitude;
     }
 
-    public void setLattitude(double lattitude) {
-        this.lattitude = lattitude;
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
     }
 
     public double getLongitude() {
