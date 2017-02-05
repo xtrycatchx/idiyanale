@@ -38,7 +38,11 @@ public abstract class BaseDeviceActivity extends BaseActivity implements Locatio
 
     private void initDeviceInfo() {
         TelephonyManager manager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        this.deviceId = manager.getDeviceId();
+        try {
+            this.deviceId = manager.getDeviceId();
+        } catch(Exception e) {
+            //TODO
+        }
     }
 
     private void initLocationManager() {

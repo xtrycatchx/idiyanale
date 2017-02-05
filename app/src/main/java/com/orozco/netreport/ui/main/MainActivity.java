@@ -8,7 +8,7 @@ import android.widget.Toast;
 
 import com.orozco.netreport.R;
 import com.orozco.netreport.model.Data;
-import com.orozco.netreport.post.api.ApiUtils;
+import com.orozco.netreport.post.api.RestAPI;
 import com.orozco.netreport.ui.BaseDeviceActivity;
 import com.skyfishjy.library.RippleBackground;
 
@@ -36,6 +36,7 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
     RippleBackground rippleBackground;
 
     private Data data;
+    private RestAPI restApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,7 +129,7 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
 
     @OnClick(R.id.reportBtn)
     public void onReportSubmit() {
-        ApiUtils.getAPIService().record(data).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+        getRestApi().record(data).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<ResponseBody>() {
                     @Override
                     public void onCompleted() {
@@ -145,5 +146,12 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
                         Toast.makeText(MainActivity.this, "Result : " + responseBody.toString(), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private RestAPI getRestApi() {
+        if (restApi == null) {
+            restApi = RestAPI.Factory.create();
+        }
+        return restApi;
     }
 }
