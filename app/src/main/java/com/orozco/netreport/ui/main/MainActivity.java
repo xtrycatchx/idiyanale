@@ -2,11 +2,14 @@ package com.orozco.netreport.ui.main;
 
 import android.app.AlertDialog;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.orozco.netreport.R;
+import com.orozco.netreport.model.Coordinates;
 import com.orozco.netreport.model.Data;
 import com.orozco.netreport.post.api.RestAPI;
 import com.orozco.netreport.ui.BaseDeviceActivity;
@@ -36,6 +39,7 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
     RippleBackground rippleBackground;
 
     private Data data;
+
     private RestAPI restApi;
 
     @Override
@@ -96,34 +100,16 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
         presenter.stopTest();
         rippleBackground.stopRippleAnimation();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(
-                MainActivity.this);
-        builder.setTitle("Data (this popup will be removed soon)");
-
-        StringBuilder sb = new StringBuilder();
-        Location loc = getLocation();
-        if (null != loc) {
-            sb.append("Latitude  : ");
-            sb.append(getLocation().getLatitude());
-            sb.append("\n");
-            sb.append("Longitude  : ");
-            sb.append(getLocation().getLongitude());
-        }
-        sb.append("\n");
-        sb.append("Imei : ");
-        sb.append(getDeviceId());
-        sb.append("\n");
-        sb.append("Connection : ");
-        sb.append(getConnection());
-        sb.append("\n");
-        sb.append("Quality : ");
-        sb.append(results);
-        builder.setMessage(sb.toString());
-        builder.show();
-
         //TODO
         data = new Data();
-
+        data.setCoordinates(new Coordinates(getLocation().getLatitude(), getLocation().getLongitude()));
+        data.setConnection(getConnection());
+        data.setCarrier("TODO"); //TODO
+        data.setTimestamp(System.currentTimeMillis());
+        data.setImei(getDeviceId());
+        data.setoSversion(android.os.Build.VERSION.RELEASE);
+        data.setPhoneModel(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.VERSION.RELEASE + " " + Build.VERSION_CODES.class.getFields()[android.os.Build.VERSION.SDK_INT].getName());
+        data.setSignal(results);
 
     }
 
@@ -133,17 +119,29 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
                 .subscribe(new Subscriber<ResponseBody>() {
                     @Override
                     public void onCompleted() {
-                        Toast.makeText(MainActivity.this, "Reported : ", Toast.LENGTH_SHORT).show();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(
+                                MainActivity.this);
+                        builder.setTitle("Data (this popup will be removed soon)");
+                        builder.setMessage(new Gson().toJson(data));
+                        builder.show();
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(MainActivity.this, "Error : " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(
+                                MainActivity.this);
+                        builder.setTitle("Error : " + e.getMessage());
+                        builder.setMessage(new Gson().toJson(data));
+                        builder.show();
                     }
 
                     @Override
                     public void onNext(ResponseBody responseBody) {
-                        Toast.makeText(MainActivity.this, "Result : " + responseBody.toString(), Toast.LENGTH_SHORT).show();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(
+                                MainActivity.this);
+                        builder.setTitle("Result : " + responseBody.toString());
+                        builder.setMessage(new Gson().toJson(data));
+                        builder.show();
                     }
                 });
     }

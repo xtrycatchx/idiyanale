@@ -27,9 +27,9 @@ public class Data {
     @Expose
     private String oSversion;
 
-    @SerializedName("date")
+    @SerializedName("timestamp")
     @Expose
-    private Date date;
+    private long timestamp;
 
     @SerializedName("coordinates")
     @Expose
@@ -75,12 +75,12 @@ public class Data {
         this.oSversion = oSversion;
     }
 
-    public Date getDate() {
-        return date;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public Coordinates getCoordinates() {
