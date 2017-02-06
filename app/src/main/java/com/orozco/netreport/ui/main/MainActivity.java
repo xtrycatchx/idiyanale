@@ -50,11 +50,6 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
         return R.layout.activity_main;
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
     @OnClick(R.id.centerImage)
     public void clicked() {
         if (rippleBackground.isRippleAnimationRunning()) {
