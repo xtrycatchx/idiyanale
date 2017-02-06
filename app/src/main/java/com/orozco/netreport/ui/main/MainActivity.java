@@ -1,18 +1,16 @@
 package com.orozco.netreport.ui.main;
 
 import android.app.AlertDialog;
-import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
-
 import com.google.gson.Gson;
 import com.orozco.netreport.R;
 import com.orozco.netreport.model.Coordinates;
 import com.orozco.netreport.model.Data;
 import com.orozco.netreport.post.api.RestAPI;
 import com.orozco.netreport.ui.BaseDeviceActivity;
+import com.orozco.netreport.utils.SharedPrefUtil;
 import com.skyfishjy.library.RippleBackground;
 
 import butterknife.BindView;
@@ -37,8 +35,6 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
     MainView mainView;
     @BindView(R.id.content)
     RippleBackground rippleBackground;
-
-    private Data data;
 
     private RestAPI restApi;
 
@@ -96,12 +92,12 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
 
     @Override
     public void displayResults(final String results) {
+
         mainView.setText(results);
         presenter.stopTest();
         rippleBackground.stopRippleAnimation();
 
-        //TODO
-        data = new Data();
+        Data data = new Data();
         data.setCoordinates(new Coordinates(getLocation().getLatitude(), getLocation().getLongitude()));
         data.setConnection(getConnection());
         data.setCarrier("TODO"); //TODO
@@ -111,10 +107,13 @@ public class MainActivity extends BaseDeviceActivity implements MainPresenter.Vi
         data.setPhoneModel(Build.MANUFACTURER + " " + Build.MODEL + " " + Build.VERSION.RELEASE + " " + Build.VERSION_CODES.class.getFields()[android.os.Build.VERSION.SDK_INT].getName());
         data.setSignal(results);
 
+        SharedPrefUtil.saveTempData(this, data);
+
     }
 
     @OnClick(R.id.reportBtn)
     public void onReportSubmit() {
+        final Data data = SharedPrefUtil.retrieveTempData(this);
         getRestApi().record(data).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<ResponseBody>() {
                     @Override
