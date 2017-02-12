@@ -2,6 +2,7 @@ package com.orozco.netreport.ui.main;
 
 import com.orozco.netreport.inject.PerActivity;
 import com.orozco.netreport.handler.StartTest;
+import com.orozco.netreport.model.Data;
 
 import javax.inject.Inject;
 
@@ -17,7 +18,6 @@ public class MainPresenter {
 
     private final StartTest startTest;
 
-
     private final CompositeSubscription subscriptions;
     private View view;
 
@@ -25,6 +25,7 @@ public class MainPresenter {
     public MainPresenter(StartTest startTest) {
         this.startTest = startTest;
         this.subscriptions = new CompositeSubscription();
+
     }
 
     public void startTest(View view) {

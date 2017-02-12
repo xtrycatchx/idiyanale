@@ -15,6 +15,14 @@ public class SharedPrefUtil {
 
     private static final String DATA_KEY = "data";
 
+    public static void createTempData(Activity activity) {
+        SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(DATA_KEY, new Gson().toJson(new Data()));
+        editor.commit();
+
+    }
+
     public static void saveTempData(Activity activity, Data data) {
         SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
