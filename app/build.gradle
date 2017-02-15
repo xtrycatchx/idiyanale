@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId 'com.orozco.netreport'
-        minSdkVersion 17
+        minSdkVersion 22
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -34,8 +34,18 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.0.0'
     compile 'com.android.support:design:25.0.0'
 
-    compile 'com.google.android.gms:play-services:8.1.0'
-    compile 'com.facebook.network.connectionclass:connectionclass:1.0.1'
+    compile 'com.jakewharton.rxbinding:rxbinding:1.0.0'
+    compile 'com.jakewharton.rxbinding:rxbinding-support-v4:1.0.0'
+    compile 'com.jakewharton.rxbinding:rxbinding-appcompat-v7:1.0.0'
+
+
+    compile 'pl.charmas.android:android-reactive-location:0.10@aar'
+    compile 'com.google.android.gms:play-services-location:9.4.0'
+    compile 'com.google.android.gms:play-services-places:9.4.0'
+
+    compile 'com.google.android.gms:play-services:9.4.0'
+    compile 'com.github.pwittchen:reactivenetwork:0.8.0'
+    compile 'com.github.pwittchen:reactivewifi:0.2.0'
 
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
