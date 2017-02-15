@@ -1,5 +1,7 @@
 package com.orozco.netreport.ui.main;
 
+import android.content.Context;
+
 import com.orozco.netreport.inject.PerActivity;
 import com.orozco.netreport.handler.StartTest;
 import com.orozco.netreport.model.Data;
@@ -28,18 +30,20 @@ public class MainPresenter {
 
     }
 
-    public void startTest(View view) {
+    public void startTest(View view, Context context) {
         this.view = view;
-        startTest.execute().subscribe(new TestSubscriber());
+        startTest.execute(context).subscribe(new TestSubscriber());
     }
 
     public void stopTest() {
-        subscriptions.unsubscribe();
+        if(null != subscriptions) {
+            subscriptions.unsubscribe();
+        }
     }
 
-    private class TestSubscriber extends Subscriber<String> {
+    private class TestSubscriber extends Subscriber<Data> {
         @Override
-        public void onNext(String result) {
+        public void onNext(Data result) {
             view.endTest();
             view.displayResults(result);
         }
@@ -58,6 +62,6 @@ public class MainPresenter {
 
         void endTest();
 
-        void displayResults(String result);
+        void displayResults(Data result);
     }
 }

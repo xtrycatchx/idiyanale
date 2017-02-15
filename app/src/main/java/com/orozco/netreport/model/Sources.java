@@ -2,19 +2,19 @@ package com.orozco.netreport.model;
 
 import android.content.Context;
 import android.os.Build;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoGsm;
+import android.telephony.CellInfoLte;
+import android.telephony.CellInfoWcdma;
+import android.telephony.CellSignalStrengthGsm;
+import android.telephony.CellSignalStrengthLte;
+import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.TelephonyManager;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-import com.orozco.netreport.model.Coordinates;
-import com.orozco.netreport.model.Data;
-import com.orozco.netreport.model.DataEnum;
-import com.orozco.netreport.model.DataTemp;
 import com.orozco.netreport.utils.ConnectionTypeUtil;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action1;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 12/2/17.
@@ -22,7 +22,7 @@ import rx.functions.Action1;
 
 public class Sources {
 
-    public Observable<DataTemp> carrier(final Context context) {
+    /**public Observable<DataTemp> carrier(final Context context) {
         Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
             @Override
             public void call(Subscriber<? super DataTemp> sub) {
@@ -74,11 +74,45 @@ public class Sources {
         Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
             @Override
             public void call(Subscriber<? super DataTemp> sub) {
-                DataTemp temp = new DataTemp(DataEnum.CONNECTION, "");//ConnectionTypeUtil.getConnectionType(context));
+                DataTemp temp = new DataTemp(DataEnum.CONNECTION, ConnectionTypeUtil.getConnectionType(context));
                 sub.onNext(temp);
                 sub.onCompleted();
             }
         });
         return observable;
     }
+
+    public Observable<DataTemp> signal(final Context context) {
+        Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
+            @Override
+            public void call(Subscriber<? super DataTemp> sub) {
+
+                TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                CellInfo cellinfo = telephonyManager.getAllCellInfo().get(0);
+                String signalStrength = new String();
+                int dbm = -666;
+                if (cellinfo instanceof CellInfoWcdma) {
+                    CellSignalStrengthWcdma cellSignalStrengthWcdma = ((CellInfoWcdma) cellinfo).getCellSignalStrength();
+                    dbm = cellSignalStrengthWcdma.getDbm();
+                    signalStrength = "WCDMA";
+                } else if (cellinfo instanceof CellInfoGsm) {
+                    CellSignalStrengthGsm cellSignalStrengthGsm = ((CellInfoGsm) cellinfo).getCellSignalStrength();
+                    dbm = cellSignalStrengthGsm.getDbm();
+                    signalStrength = "GSM";
+                } else if (cellinfo instanceof CellInfoLte) {
+                    CellSignalStrengthLte cellSignalStrengthLte = ((CellInfoLte) cellinfo).getCellSignalStrength();
+                    signalStrength = "LTE";
+                    dbm = cellSignalStrengthLte.getDbm();
+                }
+
+                signalStrength = signalStrength + " : " + dbm;
+
+                DataTemp temp = new DataTemp(DataEnum.SIGNAL, signalStrength);
+
+                sub.onNext(temp);
+                sub.onCompleted();
+            }
+        });
+        return observable;
+    }**/
 }

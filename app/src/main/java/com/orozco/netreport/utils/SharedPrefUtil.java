@@ -20,7 +20,6 @@ public class SharedPrefUtil {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(DATA_KEY, new Gson().toJson(new Data()));
         editor.commit();
-
     }
 
     public static void saveTempData(Activity activity, Data data) {

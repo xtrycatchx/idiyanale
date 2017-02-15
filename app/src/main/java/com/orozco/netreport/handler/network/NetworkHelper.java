@@ -1,17 +1,18 @@
 package com.orozco.netreport.handler.network;
 
-import com.facebook.network.connectionclass.ConnectionClassManager;
-import com.facebook.network.connectionclass.ConnectionQuality;
-import com.facebook.network.connectionclass.DeviceBandwidthSampler;
+import android.content.Context;
+import android.location.Location;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
+import com.github.pwittchen.reactivenetwork.library.Connectivity;
+import com.github.pwittchen.reactivenetwork.library.ReactiveNetwork;
+import com.google.android.gms.location.LocationRequest;
+import com.orozco.netreport.model.Data;
 
 import javax.inject.Inject;
 
+import pl.charmas.android.reactivelocation.ReactiveLocationProvider;
 import rx.Observable;
+import rx.functions.Func2;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
@@ -19,60 +20,45 @@ import rx.Observable;
 
 public class NetworkHelper {
 
-    private String testUrl = "http://bloodlifeph.herokuapp.com/img/graph_share_bloodlife.jpg";
-    private int attempts = 0;
-    private ConnectionQuality mConnectionClass = ConnectionQuality.UNKNOWN;
-    private ConnectionClassManager mConnectionClassManager;
-    private DeviceBandwidthSampler mDeviceBandwidthSampler;
-    private ConnectionChangedListener mListener;
 
     @Inject
     public NetworkHelper() {
     }
 
-    public Observable<String> executeNetworkTest() {
+    public Observable<Data> executeNetworkTest(final Context context) throws SecurityException {
 
-        mConnectionClassManager = ConnectionClassManager.getInstance();
-        mDeviceBandwidthSampler = DeviceBandwidthSampler.getInstance();
-        mListener = new ConnectionChangedListener();
-        mConnectionClassManager.register(mListener);
-        testDownload();
-        while (mConnectionClass == ConnectionQuality.UNKNOWN && attempts < 10) {
-            attempts++;
-            testDownload();
-        }
-        return Observable.just(mConnectionClass.toString());
-    }
 
-    private void testDownload() {
-        mDeviceBandwidthSampler.startSampling();
-        try {
-            URLConnection connection = new URL(testUrl).openConnection();
-            connection.setUseCaches(false);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-            try {
-                byte[] buffer = new byte[1024];
-                while (input.read(buffer) != -1) {
-                }
-            } finally {
-                input.close();
+        Observable<Connectivity> o1 = ReactiveNetwork.observeNetworkConnectivity(context);
+        LocationRequest request = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setNumUpdates(1)
+                .setInterval(100);
+
+        ReactiveLocationProvider locationProvider = new ReactiveLocationProvider(context);
+        Observable<Location> o2 = locationProvider.getUpdatedLocation(request);
+
+        return Observable.zip(o1, o2, new Func2<Connectivity, Location, Data>() {
+            @Override
+            public Data call(Connectivity connectivity, Location location) {
+                Data data = new Data(connectivity, location);
+                return data;
             }
-        } catch (IOException e) {
+        });
 
-        }
-        mDeviceBandwidthSampler.stopSampling();
-    }
+                //.subscribeOn(Schedulers.io())
+                //.observeOn(AndroidSchedulers.mainThread())
+                //.subscribe(new Action1<X>() {
+                //    @Override
+                //    public void call(X x) {
 
-    /**
-     * Listener to update the UI upon connectionclass change.
-     */
-    private class ConnectionChangedListener
-            implements ConnectionClassManager.ConnectionClassStateChangeListener {
+                //        Toast.makeText(context, "Yehey " + new Gson().toJson(x), Toast.LENGTH_SHORT).show();
+                //    }
+                //});
 
-        @Override
-        public void onBandwidthStateChange(ConnectionQuality bandwidthState) {
-            mConnectionClass = bandwidthState;
-        }
+
+
+
+
+        //return Observable.just(mConnectionClass.toString());
     }
 }

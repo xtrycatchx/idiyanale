@@ -1,7 +1,10 @@
 package com.orozco.netreport.handler;
 
+import android.content.Context;
+
 import com.orozco.netreport.common.Schedulers;
 import com.orozco.netreport.handler.network.NetworkHelper;
+import com.orozco.netreport.model.Data;
 
 import javax.inject.Inject;
 
@@ -21,7 +24,7 @@ public class StartTest {
         this.helper = helper;
     }
 
-    public Observable<String> execute() {
-        return helper.executeNetworkTest().compose(schedulers.<String>apply());
+    public Observable<Data> execute(Context context) {
+        return helper.executeNetworkTest(context).compose(schedulers.<Data>apply());
     }
 }
