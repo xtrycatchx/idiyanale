@@ -106,7 +106,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                         } else {
                             mainView.setButtonvisibility(View.INVISIBLE);
                             rippleBackground.startRippleAnimation();
-                            Thread t = new Thread(new Runnable() {
+                            new Thread(new Runnable() {
                                 @Override
                                 public void run() {
                                     try {
@@ -116,8 +116,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                                     }
                                     beginTest();
                                 }
-                            });
-                            t.start();
+                            }).start();
                         }
                     }
                 });
