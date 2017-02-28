@@ -36,7 +36,7 @@ public class MainPresenter {
     }
 
     public void stopTest() {
-        if(null != subscriptions) {
+        if (null != subscriptions) {
             subscriptions.unsubscribe();
         }
     }

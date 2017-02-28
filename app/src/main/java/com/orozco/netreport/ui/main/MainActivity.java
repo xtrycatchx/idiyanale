@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -97,30 +98,32 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         mainView.setButtonvisibility(View.INVISIBLE);
 
         buttonSubscriber = RxView.clicks(centerImage).subscribe(new Action1<Void>() {
-                    @Override
-                    public void call(Void aVoid) {
-                        if (rippleBackground.isRippleAnimationRunning()) {
-                            mainView.setButtonvisibility(View.INVISIBLE);
-                            rippleBackground.stopRippleAnimation();
-                            endTest();
-                        } else {
-                            mainView.setButtonvisibility(View.INVISIBLE);
-                            rippleBackground.startRippleAnimation();
-                            Thread t = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        Thread.sleep(3000);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                    beginTest();
-                                }
-                            });
-                            t.start();
+            @Override
+            public void call(Void aVoid) {
+                if (rippleBackground.isRippleAnimationRunning()) {
+                    mainView.setButtonvisibility(View.INVISIBLE);
+                    rippleBackground.stopRippleAnimation();
+                    centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
+                    endTest();
+                } else {
+                    mainView.setButtonvisibility(View.INVISIBLE);
+                    centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
+                    rippleBackground.startRippleAnimation();
+                    Thread t = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(3000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            beginTest();
                         }
-                    }
-                });
+                    });
+                    t.start();
+                }
+            }
+        });
     }
 
     @Override
@@ -144,7 +147,13 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
 
 
         if (!AccessRequester.isLocationEnabled(this)) {
-            AccessRequester.requestLocationAccess(this);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    AccessRequester.requestLocationAccess(MainActivity.this);
+                }
+            });
+
             return;
         }
 
@@ -163,6 +172,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         mainView.setText("GONNA CHANGE THIS LATER");
         presenter.stopTest();
         rippleBackground.stopRippleAnimation();
+        centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
         SharedPrefUtil.saveTempData(this, results);
 
     }
@@ -178,7 +188,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         String json2 = gson2.toJson(coordinates);
         b2.setMessage(json2);
         b2.show();
-
 
         final Data data = SharedPrefUtil.retrieveTempData(this);
         getRestApi().record(data).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())

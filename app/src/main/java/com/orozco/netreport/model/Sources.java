@@ -11,8 +11,6 @@ import android.telephony.CellSignalStrengthLte;
 import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.TelephonyManager;
 
-import com.orozco.netreport.utils.ConnectionTypeUtil;
-
 import rx.Observable;
 import rx.Subscriber;
 
@@ -22,97 +20,107 @@ import rx.Subscriber;
 
 public class Sources {
 
-    /**public Observable<DataTemp> carrier(final Context context) {
-        Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
-            @Override
-            public void call(Subscriber<? super DataTemp> sub) {
-                DataTemp temp = new DataTemp(DataEnum.CARRIER, ((TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE)).getNetworkOperatorName());
-                sub.onNext(temp);
-                sub.onCompleted();
-            }
-        });
-        return observable;
+    private Sources() {
+
     }
 
-    public Observable<DataTemp> phoneModel() {
-        Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
+    public static Observable<String> networkOperator(final Context context) {
+        Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
             @Override
-            public void call(Subscriber<? super DataTemp> sub) {
-                DataTemp temp = new DataTemp(DataEnum.PHONE_MODEL, Build.MANUFACTURER + " " + Build.MODEL + " " + Build.VERSION.RELEASE + " " + Build.VERSION_CODES.class.getFields()[android.os.Build.VERSION.SDK_INT].getName());
-                sub.onNext(temp);
-                sub.onCompleted();
-            }
-        });
-        return observable;
-    }
+            public void call(Subscriber<? super String> sub) {
 
-    public Observable<DataTemp> oSversion() {
-        Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
-            @Override
-            public void call(Subscriber<? super DataTemp> sub) {
-                DataTemp temp = new DataTemp(DataEnum.OSVERSION, android.os.Build.VERSION.RELEASE);
-                sub.onNext(temp);
-                sub.onCompleted();
-            }
-        });
-        return observable;
-    }
+                String networkOperator = null;
 
-    public Observable<DataTemp> imei(final Context context) {
-        Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
-            @Override
-            public void call(Subscriber<? super DataTemp> sub) {
-                DataTemp temp = new DataTemp(DataEnum.IMEI, ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId());
-                sub.onNext(temp);
-                sub.onCompleted();
-            }
-        });
-        return observable;
-    }
-
-    public Observable<DataTemp> connection(final Context context) {
-        Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
-            @Override
-            public void call(Subscriber<? super DataTemp> sub) {
-                DataTemp temp = new DataTemp(DataEnum.CONNECTION, ConnectionTypeUtil.getConnectionType(context));
-                sub.onNext(temp);
-                sub.onCompleted();
-            }
-        });
-        return observable;
-    }
-
-    public Observable<DataTemp> signal(final Context context) {
-        Observable<DataTemp> observable = Observable.create(new Observable.OnSubscribe<DataTemp>() {
-            @Override
-            public void call(Subscriber<? super DataTemp> sub) {
-
-                TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                CellInfo cellinfo = telephonyManager.getAllCellInfo().get(0);
-                String signalStrength = new String();
-                int dbm = -666;
-                if (cellinfo instanceof CellInfoWcdma) {
-                    CellSignalStrengthWcdma cellSignalStrengthWcdma = ((CellInfoWcdma) cellinfo).getCellSignalStrength();
-                    dbm = cellSignalStrengthWcdma.getDbm();
-                    signalStrength = "WCDMA";
-                } else if (cellinfo instanceof CellInfoGsm) {
-                    CellSignalStrengthGsm cellSignalStrengthGsm = ((CellInfoGsm) cellinfo).getCellSignalStrength();
-                    dbm = cellSignalStrengthGsm.getDbm();
-                    signalStrength = "GSM";
-                } else if (cellinfo instanceof CellInfoLte) {
-                    CellSignalStrengthLte cellSignalStrengthLte = ((CellInfoLte) cellinfo).getCellSignalStrength();
-                    signalStrength = "LTE";
-                    dbm = cellSignalStrengthLte.getDbm();
+                try {
+                    networkOperator = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getNetworkOperatorName();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
-                signalStrength = signalStrength + " : " + dbm;
 
-                DataTemp temp = new DataTemp(DataEnum.SIGNAL, signalStrength);
-
-                sub.onNext(temp);
+                sub.onNext(networkOperator);
                 sub.onCompleted();
             }
         });
         return observable;
-    }**/
+    }
+
+    public static Observable<Device> device() {
+        Observable<Device> observable = Observable.create(new Observable.OnSubscribe<Device>() {
+            @Override
+            public void call(Subscriber<? super Device> sub) {
+
+                Device device = new Device(Build.MANUFACTURER, Build.MODEL, Build.VERSION.RELEASE, Build.VERSION_CODES.class.getFields()[android.os.Build.VERSION.SDK_INT].getName());
+
+                sub.onNext(device);
+                sub.onCompleted();
+            }
+        });
+        return observable;
+    }
+
+    public static Observable<String> imei(final Context context) {
+        Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> sub) {
+
+
+                String imei = null;
+
+                try {
+                    ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+                sub.onNext(imei);
+                sub.onCompleted();
+            }
+        });
+        return observable;
+    }
+
+    public static Observable<String> signal(final Context context) {
+        Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> sub) {
+
+                String signalStrength = new String();
+
+                try {
+
+                    TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+
+
+                    CellInfo cellinfo = telephonyManager.getAllCellInfo().get(0);
+
+                    int dbm = -666;
+                    if (cellinfo instanceof CellInfoWcdma) {
+                        CellSignalStrengthWcdma cellSignalStrengthWcdma = ((CellInfoWcdma) cellinfo).getCellSignalStrength();
+                        dbm = cellSignalStrengthWcdma.getDbm();
+                        signalStrength = "WCDMA";
+                    } else if (cellinfo instanceof CellInfoGsm) {
+                        CellSignalStrengthGsm cellSignalStrengthGsm = ((CellInfoGsm) cellinfo).getCellSignalStrength();
+                        dbm = cellSignalStrengthGsm.getDbm();
+                        signalStrength = "GSM";
+                    } else if (cellinfo instanceof CellInfoLte) {
+                        CellSignalStrengthLte cellSignalStrengthLte = ((CellInfoLte) cellinfo).getCellSignalStrength();
+                        signalStrength = "LTE";
+                        dbm = cellSignalStrengthLte.getDbm();
+                    }
+
+                    signalStrength = signalStrength + " : " + dbm;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+                sub.onNext(signalStrength);
+                sub.onCompleted();
+            }
+        });
+        return observable;
+    }
 }
