@@ -109,7 +109,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                     mainView.setButtonvisibility(View.INVISIBLE);
                     centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
                     rippleBackground.startRippleAnimation();
-                    Thread t = new Thread(new Runnable() {
+                    new Thread(new Runnable() {
                         @Override
                         public void run() {
                             try {
@@ -119,8 +119,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                             }
                             beginTest();
                         }
-                    });
-                    t.start();
+                    }).start();
                 }
             }
         });
