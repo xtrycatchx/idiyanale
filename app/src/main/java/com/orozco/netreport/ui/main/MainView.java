@@ -29,11 +29,11 @@ public class MainView extends BaseView {
 
     public void setText(String text) {
         reportBtn.setText(text);
-        setButtonvisibility(VISIBLE);
+        setButtonVisibility(VISIBLE);
     }
 
 
-    public void setButtonvisibility(int visibility) {
+    public void setButtonVisibility(int visibility) {
         reportBtn.setVisibility(visibility);
     }
 }

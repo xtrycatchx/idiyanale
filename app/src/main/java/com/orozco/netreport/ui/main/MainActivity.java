@@ -86,7 +86,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     @Override
     public void onPause() {
         super.onPause();
-        safelyUnsubscribe(buttonSubscriber);
+        safelyUnsubscribe(buttonSubscription);
     }
 
     private void safelyUnsubscribe(Subscription... subscriptions) {
@@ -97,25 +97,28 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         }
     }
 
-    Subscription buttonSubscriber;
+    Subscription buttonSubscription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivityComponent().inject(this);
         SharedPrefUtil.createTempData(this);
-        mainView.setButtonvisibility(View.INVISIBLE);
+        mainView.setButtonVisibility(View.INVISIBLE);
+        buttonSubscription = getButtonSubscription();
+    }
 
-        buttonSubscriber = RxView.clicks(centerImage).subscribe(new Action1<Void>() {
+    private Subscription getButtonSubscription() {
+        return RxView.clicks(centerImage).subscribe(new Action1<Void>() {
             @Override
             public void call(Void aVoid) {
                 if (rippleBackground.isRippleAnimationRunning()) {
-                    mainView.setButtonvisibility(View.INVISIBLE);
+                    mainView.setButtonVisibility(View.INVISIBLE);
                     rippleBackground.stopRippleAnimation();
                     centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
                     endTest();
                 } else {
-                    mainView.setButtonvisibility(View.INVISIBLE);
+                    mainView.setButtonVisibility(View.INVISIBLE);
                     centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
                     rippleBackground.startRippleAnimation();
                     new Thread(new Runnable() {
