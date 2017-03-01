@@ -67,6 +67,8 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     @Override
     public void onResume() {
         super.onResume();
+        buttonSubscription = getButtonSubscription();
+
     }
 
     private void requestCoarseLocationPermission() {
