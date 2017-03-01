@@ -38,6 +38,7 @@ import javax.inject.Inject;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
@@ -47,6 +48,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
+    private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001; //arbitrary int
 
     @Inject
     MainPresenter presenter;
@@ -71,6 +73,13 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{ACCESS_COARSE_LOCATION},
                     PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
+        }
+    }
+
+    private void requestPhoneStatePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{READ_PHONE_STATE},
+                    PERMISSIONS_REQUEST_READ_PHONE_STATE);
         }
     }
 
@@ -137,13 +146,17 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                 ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED;
         boolean coarseLocationPermissionNotGranted =
                 ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED;
-
+        boolean phoneStatePermissionNotGranted =
+                ActivityCompat.checkSelfPermission(this, READ_PHONE_STATE) != PERMISSION_GRANTED;
 
         if (fineLocationPermissionNotGranted && coarseLocationPermissionNotGranted) {
             requestCoarseLocationPermission();
             return;
         }
-
+        if (phoneStatePermissionNotGranted) {
+            requestPhoneStatePermission();
+            return;
+        }
 
         if (!AccessRequester.isLocationEnabled(this)) {
             runOnUiThread(new Runnable() {
