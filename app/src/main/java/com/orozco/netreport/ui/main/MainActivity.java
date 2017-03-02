@@ -159,10 +159,12 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
 
         if (fineLocationPermissionNotGranted && coarseLocationPermissionNotGranted) {
             requestCoarseLocationPermission();
+            endTest();
             return;
         }
         if (phoneStatePermissionNotGranted) {
             requestPhoneStatePermission();
+            endTest();
             return;
         }
 
@@ -171,9 +173,10 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                 @Override
                 public void run() {
                     AccessRequester.requestLocationAccess(MainActivity.this);
+
                 }
             });
-
+            endTest();
             return;
         }
 
