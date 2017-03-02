@@ -67,8 +67,13 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     @Override
     public void onResume() {
         super.onResume();
-        buttonSubscription = getButtonSubscription();
-
+        if (buttonSubscription == null) {
+            buttonSubscription = getButtonSubscription();
+        }
+        else if(buttonSubscription.isUnsubscribed()) {
+            buttonSubscription = null;
+            buttonSubscription = getButtonSubscription();
+        }
     }
 
     private void requestCoarseLocationPermission() {
@@ -115,9 +120,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             @Override
             public void call(Void aVoid) {
                 if (rippleBackground.isRippleAnimationRunning()) {
-                    mainView.setButtonVisibility(View.INVISIBLE);
-                    rippleBackground.stopRippleAnimation();
-                    centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
+
                     endTest();
                 } else {
                     mainView.setButtonVisibility(View.INVISIBLE);
@@ -180,7 +183,16 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     @Override
     public void endTest() {
+
         presenter.stopTest();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mainView.setButtonVisibility(View.INVISIBLE);
+                rippleBackground.stopRippleAnimation();
+                centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
+            }
+        });
     }
 
     @Override
