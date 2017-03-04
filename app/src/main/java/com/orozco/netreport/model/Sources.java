@@ -36,8 +36,6 @@ public class Sources {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
-
                 sub.onNext(networkOperator);
                 sub.onCompleted();
             }

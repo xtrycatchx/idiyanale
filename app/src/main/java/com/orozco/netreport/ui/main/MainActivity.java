@@ -38,6 +38,7 @@ import javax.inject.Inject;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
@@ -47,6 +48,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
+    private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001; //arbitrary int
 
     @Inject
     MainPresenter presenter;
@@ -65,6 +67,8 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     @Override
     public void onResume() {
         super.onResume();
+        buttonSubscription = getButtonSubscription();
+
     }
 
     private void requestCoarseLocationPermission() {
@@ -74,10 +78,17 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         }
     }
 
+    private void requestPhoneStatePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{READ_PHONE_STATE},
+                    PERMISSIONS_REQUEST_READ_PHONE_STATE);
+        }
+    }
+
     @Override
     public void onPause() {
         super.onPause();
-        safelyUnsubscribe(buttonSubscriber);
+        safelyUnsubscribe(buttonSubscription);
     }
 
     private void safelyUnsubscribe(Subscription... subscriptions) {
@@ -88,25 +99,28 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         }
     }
 
-    Subscription buttonSubscriber;
+    Subscription buttonSubscription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivityComponent().inject(this);
         SharedPrefUtil.createTempData(this);
-        mainView.setButtonvisibility(View.INVISIBLE);
+        mainView.setButtonVisibility(View.INVISIBLE);
+        buttonSubscription = getButtonSubscription();
+    }
 
-        buttonSubscriber = RxView.clicks(centerImage).subscribe(new Action1<Void>() {
+    private Subscription getButtonSubscription() {
+        return RxView.clicks(centerImage).subscribe(new Action1<Void>() {
             @Override
             public void call(Void aVoid) {
                 if (rippleBackground.isRippleAnimationRunning()) {
-                    mainView.setButtonvisibility(View.INVISIBLE);
+                    mainView.setButtonVisibility(View.INVISIBLE);
                     rippleBackground.stopRippleAnimation();
                     centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
                     endTest();
                 } else {
-                    mainView.setButtonvisibility(View.INVISIBLE);
+                    mainView.setButtonVisibility(View.INVISIBLE);
                     centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
                     rippleBackground.startRippleAnimation();
                     new Thread(new Runnable() {
@@ -137,13 +151,17 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                 ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED;
         boolean coarseLocationPermissionNotGranted =
                 ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED;
-
+        boolean phoneStatePermissionNotGranted =
+                ActivityCompat.checkSelfPermission(this, READ_PHONE_STATE) != PERMISSION_GRANTED;
 
         if (fineLocationPermissionNotGranted && coarseLocationPermissionNotGranted) {
             requestCoarseLocationPermission();
             return;
         }
-
+        if (phoneStatePermissionNotGranted) {
+            requestPhoneStatePermission();
+            return;
+        }
 
         if (!AccessRequester.isLocationEnabled(this)) {
             runOnUiThread(new Runnable() {
