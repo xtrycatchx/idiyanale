@@ -71,11 +71,11 @@ public class Sources {
                     ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
                 } catch (Exception e) {
                     e.printStackTrace();
+                } finally {
+                    sub.onNext(imei);
+                    sub.onCompleted();
                 }
 
-
-                sub.onNext(imei);
-                sub.onCompleted();
             }
         });
         return observable;

@@ -1,7 +1,6 @@
 package com.orozco.netreport.model;
 
 import android.location.Location;
-import android.telephony.TelephonyManager;
 
 import com.github.pwittchen.reactivenetwork.library.Connectivity;
 
