@@ -16,10 +16,10 @@ import rx.Observable;
 
 public interface RestAPI {
 
-    String BASE_URL = "https://idinayale.herokuapp.com/api/";
+    String BASE_URL = "REPLACE";
 
-    @POST("/record")
-    Observable<ResponseBody> record(@Body Data data);
+    @POST("record")
+    Observable<String> record(@Body String data);
 
     class Factory {
         public static RestAPI create() {

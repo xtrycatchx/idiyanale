@@ -1,6 +1,7 @@
 package com.orozco.netreport.ui.main;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -25,7 +26,6 @@ import com.skyfishjy.library.RippleBackground;
 
 import butterknife.BindView;
 import butterknife.OnClick;
-import okhttp3.ResponseBody;
 
 import rx.Subscriber;
 import rx.Subscription;
@@ -212,27 +212,12 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     @OnClick(R.id.reportBtn)
     public void onReportSubmit() {
 
-        Data coordinates = SharedPrefUtil.retrieveTempData(MainActivity.this);
-        AlertDialog.Builder b2 = new AlertDialog.Builder(
-                MainActivity.this);
-        b2.setTitle("X ");
-        Gson gson2 = new GsonBuilder().setPrettyPrinting().create();
-        String json2 = gson2.toJson(coordinates);
-        b2.setMessage(json2);
-        b2.show();
-
         final Data data = SharedPrefUtil.retrieveTempData(this);
-        getRestApi().record(data).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<ResponseBody>() {
+        getRestApi().record(new Gson().toJson(data)).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<String>() {
                     @Override
                     public void onCompleted() {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(
-                                MainActivity.this);
-                        builder.setTitle("Data (this popup will be removed soon)");
-                        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                        String json = gson.toJson(data);
-                        builder.setMessage(json);
-                        builder.show();
+
                     }
 
                     @Override
@@ -240,20 +225,24 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                         AlertDialog.Builder builder = new AlertDialog.Builder(
                                 MainActivity.this);
                         builder.setTitle("Error : " + e.getMessage());
-                        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                        String json = gson.toJson(data);
-                        builder.setMessage(json);
+                        builder.setMessage(e.getMessage());
                         builder.show();
                     }
 
                     @Override
-                    public void onNext(ResponseBody responseBody) {
+                    public void onNext(String response) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(
                                 MainActivity.this);
-                        builder.setTitle("Result : " + responseBody.toString());
-                        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                        String json = gson.toJson(data);
-                        builder.setMessage(json);
+                        builder.setTitle("Data Reported");
+                        builder.setMessage(response);
+                        builder.setPositiveButton("See Data Reported", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                new AlertDialog.Builder(
+                                        MainActivity.this)
+                                        .setMessage(new GsonBuilder().setPrettyPrinting().create().toJson(data)).show();
+                            }
+                        });
                         builder.show();
                     }
                 });
