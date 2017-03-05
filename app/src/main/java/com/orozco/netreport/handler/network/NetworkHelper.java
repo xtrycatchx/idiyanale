@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import pl.charmas.android.reactivelocation.ReactiveLocationProvider;
 import rx.Observable;
 import rx.functions.Func6;
+import rx.functions.Func7;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
@@ -44,12 +45,13 @@ public class NetworkHelper {
         Observable<Device> o4 = Sources.device();
         Observable<String> o5 = Sources.imei(context);
         Observable<String> o6 = Sources.signal(context);
+        Observable<String> o7 = Sources.bandwidth(context);
 
 
-        return Observable.zip(o1, o2, o3, o4, o5, o6, new Func6<Connectivity, Location, String, Device, String, String, Data>() {
+        return Observable.zip(o1, o2, o3, o4, o5, o6, o7, new Func7<Connectivity, Location, String, Device, String, String, String, Data>() {
             @Override
-            public Data call(Connectivity connectivity, Location location, String operator, Device device, String imei, String signal) {
-                Data data = new Data(connectivity, location, operator, device, imei, signal);
+            public Data call(Connectivity connectivity, Location location, String operator, Device device, String imei, String signal, String bandwidth) {
+                Data data = new Data(connectivity, location, operator, device, imei, signal, bandwidth);
                 return data;
             }
         });

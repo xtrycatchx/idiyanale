@@ -17,18 +17,20 @@ public class Data {
     private Device device;
     private String imei;
     private String signal;
+    private String bandwidth;
 
     public Data() {
 
     }
 
-    public Data(Connectivity connectivity, Location location, String operator, Device device, String imei, String signal) {
+    public Data(Connectivity connectivity, Location location, String operator, Device device, String imei, String signal, String bandwidth) {
         this.connectivity = connectivity;
         this.location = location;
         this.operator = operator;
         this.device = device;
         this.imei = imei;
         this.signal = signal;
+        this.bandwidth = bandwidth;
     }
 
     public Connectivity getConnectivity() {
@@ -77,5 +79,13 @@ public class Data {
 
     public void setSignal(String signal) {
         this.signal = signal;
+    }
+
+    public String getBandwidth() {
+        return bandwidth;
+    }
+
+    public void setBandwidth(String bandwidth) {
+        this.bandwidth = bandwidth;
     }
 }
