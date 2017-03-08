@@ -120,25 +120,30 @@ public class Sources {
             public void call(SingleSubscriber<? super String> sub) {
                 String ratevalue = "";
                 try {
-                    String fiveMbFile = "http://d1355990.i49.quadrahosting.com.au/2012_06/M16&M17_NII.jpg";
-                    URL url = new URL(fiveMbFile);
-                    long startTime = System.currentTimeMillis();
-                    InputStream is = url.openConnection().getInputStream();
+                    String oneGBFile = "http://speedtest.tele2.net/1GB.zip";
+                    URL url = new URL(oneGBFile);
+
+                    InputStream is = url.openStream();
                     BufferedInputStream bis = new BufferedInputStream(is);
-                    int red = 0;
-                    long size = 0;
+                    long startBytes = TrafficStats.getTotalRxBytes();
+                    int size = 0;
                     byte[] buf = new byte[1024];
-                    while ((red = bis.read(buf)) != -1) {
-                        size += red;
+                    long startTime = System.currentTimeMillis();
+
+                    // download 5000kb
+                    while (size < 5000 && System.currentTimeMillis() - startTime < 15000) {
+                        bis.read(buf);
+                        size++;
                     }
                     long endTime = System.currentTimeMillis();
-                    double rate = (((size / 1024) / ((endTime - startTime) / 1000)) * 8);
-                    rate = Math.round(rate * 100.0) / 100.0;
-                    //if (rate > 1000) {
-                    //    ratevalue = String.valueOf(rate / 1024).concat(" Mbps");
-                    //} else {
-                        ratevalue = String.valueOf(rate).concat(" Kbps");
-                    //}
+                    long endBytes = TrafficStats.getTotalRxBytes();
+                    long totalTime = endTime - startTime;
+                    long totalBytes = endBytes - startBytes;
+
+                    double rate = Math.round(totalBytes * 8 / 1024 / ((double) totalTime / 1000));
+
+                    ratevalue = String.valueOf(rate).concat(" Kbps");
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -148,4 +153,39 @@ public class Sources {
             }
         });
     }
+    //    public static Single<String> bandwidth(final Context context) {
+//        return Single.create(new Single.OnSubscribe<String>() {
+//            @Override
+//            public void call(SingleSubscriber<? super String> sub) {
+//                String ratevalue = new String();
+//                try {
+//                    String fiveMbFile = "http://d1355990.i49.quadrahosting.com.au/2012_06/M16&M17_NII.jpg";
+//                    URL url = new URL(fiveMbFile);
+//
+//                    InputStream is = url.openConnection().getInputStream();
+//                    BufferedInputStream bis = new BufferedInputStream(is);
+//                    int red = 0;
+//                    long size = 0;
+//                    byte[] buf = new byte[1024];
+//                    long startTime = System.currentTimeMillis();
+//                    while ((red = bis.read(buf)) != -1) {
+//                        size += red;
+//                    }
+//                    long endTime = System.currentTimeMillis();
+//                    double rate = (((size / 1024) / ((endTime - startTime) / 1000)) * 8);
+//                    rate = Math.round(rate * 100.0) / 100.0;
+//                    //if (rate > 1000) {
+//                    //    ratevalue = String.valueOf(rate / 1024).concat(" Mbps");
+//                    //} else {
+//                    ratevalue = String.valueOf(rate).concat(" Kbps");
+//                    //}
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    sub.onSuccess(ratevalue);
+//                }
+//            }
+//        });
+//    }
+
 }
