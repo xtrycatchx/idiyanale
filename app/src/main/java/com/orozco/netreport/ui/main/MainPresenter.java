@@ -8,6 +8,8 @@ import com.orozco.netreport.model.Data;
 
 import javax.inject.Inject;
 
+import rx.Single;
+import rx.SingleSubscriber;
 import rx.Subscriber;
 import rx.subscriptions.CompositeSubscription;
 
@@ -23,16 +25,16 @@ public class MainPresenter {
     private final CompositeSubscription subscriptions;
     private View view;
 
+
     @Inject
     public MainPresenter(StartTest startTest) {
         this.startTest = startTest;
         this.subscriptions = new CompositeSubscription();
-
     }
 
     public void startTest(View view, Context context) {
         this.view = view;
-        startTest.execute(context).subscribe(new TestSubscriber());
+        startTest.execute(context).subscribe(new TestSingleSubscriber());
     }
 
     public void stopTest() {
@@ -41,9 +43,9 @@ public class MainPresenter {
         }
     }
 
-    private class TestSubscriber extends Subscriber<Data> {
+    private class TestSingleSubscriber extends SingleSubscriber<Data> {
         @Override
-        public void onNext(Data result) {
+        public void onSuccess(Data result) {
             view.endTest();
             view.displayResults(result);
         }
@@ -52,9 +54,6 @@ public class MainPresenter {
         public void onError(Throwable e) {
         }
 
-        @Override
-        public void onCompleted() {
-        }
     }
 
     public interface View {

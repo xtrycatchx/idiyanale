@@ -14,6 +14,7 @@ import javax.inject.Inject;
 
 import pl.charmas.android.reactivelocation.ReactiveLocationProvider;
 import rx.Observable;
+import rx.Single;
 import rx.functions.Func6;
 import rx.functions.Func7;
 
@@ -28,33 +29,36 @@ public class NetworkHelper {
     public NetworkHelper() {
     }
 
-    public Observable<Data> executeNetworkTest(final Context context) throws SecurityException {
+    public Single<Data> executeNetworkTest(final Context context) throws SecurityException {
 
 
-        Observable<Connectivity> o1 = ReactiveNetwork.observeNetworkConnectivity(context);
+        Single<Connectivity> o1 = ReactiveNetwork.observeNetworkConnectivity(context).first().toSingle();
         LocationRequest request = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setNumUpdates(1)
                 .setInterval(100);
 
+
         ReactiveLocationProvider locationProvider = new ReactiveLocationProvider(context);
-        Observable<Location> o2 = locationProvider.getUpdatedLocation(request);
+
+        Single<Location> o2 = locationProvider.getUpdatedLocation(request).first().toSingle();
 
 
-        Observable<String> o3 = Sources.networkOperator(context);
-        Observable<Device> o4 = Sources.device();
-        Observable<String> o5 = Sources.imei(context);
-        Observable<String> o6 = Sources.signal(context);
-        Observable<String> o7 = Sources.bandwidth(context);
+        Single<String> o3 = Sources.networkOperator(context);
+        Single<Device> o4 = Sources.device();
+        Single<String> o5 = Sources.imei(context);
+        Single<String> o6 = Sources.signal(context);
+        Single<String> o7 = Sources.bandwidth();
 
 
-        return Observable.zip(o1, o2, o3, o4, o5, o6, o7, new Func7<Connectivity, Location, String, Device, String, String, String, Data>() {
-            @Override
+        return Single.zip(o1, o2, o3, o4, o5, o6, o7, new Func7<Connectivity, Location, String, Device, String, String, String, Data>() {
+
             public Data call(Connectivity connectivity, Location location, String operator, Device device, String imei, String signal, String bandwidth) {
                 Data data = new Data(connectivity, location, operator, device, imei, signal, bandwidth);
                 return data;
             }
         });
+
 
     }
 }

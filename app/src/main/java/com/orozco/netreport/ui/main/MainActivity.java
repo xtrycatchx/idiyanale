@@ -147,6 +147,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         return R.layout.activity_main;
     }
 
+
     @Override
     public void beginTest() {
 

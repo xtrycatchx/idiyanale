@@ -1,6 +1,7 @@
 package com.orozco.netreport.model;
 
 import android.content.Context;
+import android.net.TrafficStats;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -19,6 +20,8 @@ import java.io.InputStream;
 import java.net.URL;
 
 import rx.Observable;
+import rx.Single;
+import rx.SingleSubscriber;
 import rx.Subscriber;
 
 /**
@@ -31,97 +34,91 @@ public class Sources {
 
     }
 
-    public static Observable<String> networkOperator(final Context context) {
-        Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
+    public static Single<String> networkOperator(final Context context) {
+        return Single.create(new Single.OnSubscribe<String>() {
             @Override
-            public void call(Subscriber<? super String> sub) {
+            public void call(SingleSubscriber<? super String> sub) {
 
                 String networkOperator = null;
 
                 try {
                     networkOperator = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getNetworkOperatorName();
                 } catch (Exception e) {
+
                     e.printStackTrace();
                 }
-                sub.onNext(networkOperator);
-                sub.onCompleted();
+                sub.onSuccess(networkOperator);
             }
         });
-        return observable;
     }
 
-    public static Observable<Device> device() {
-        Observable<Device> observable = Observable.create(new Observable.OnSubscribe<Device>() {
+    public static Single<Device> device() {
+        return Single.create(new Single.OnSubscribe<Device>() {
             @Override
-            public void call(Subscriber<? super Device> sub) {
+            public void call(SingleSubscriber<? super Device> sub) {
 
                 Device device = new Device(Build.MANUFACTURER, Build.MODEL, Build.VERSION.RELEASE, Build.VERSION_CODES.class.getFields()[android.os.Build.VERSION.SDK_INT].getName());
 
-                sub.onNext(device);
-                sub.onCompleted();
+                sub.onSuccess(device);
             }
         });
-        return observable;
     }
 
-    public static Observable<String> imei(final Context context) {
-        Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
+    public static Single<String> imei(final Context context) {
+        return Single.create(new Single.OnSubscribe<String>() {
             @Override
-            public void call(Subscriber<? super String> sub) {
+            public void call(SingleSubscriber<? super String> sub) {
                 String imei = null;
                 try {
-                    ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+                    imei = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
-                    sub.onNext(imei);
-                    sub.onCompleted();
+                    sub.onSuccess(imei);
                 }
             }
         });
-        return observable;
     }
 
-    public static Observable<String> signal(final Context context) {
-        Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
-            @Override
-            public void call(Subscriber<? super String> sub) {
-                String signalStrength = new String();
-                    try {
-                        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                        CellInfo cellinfo = telephonyManager.getAllCellInfo().get(0);
-                        int dbm = -666;
-                        if (cellinfo instanceof CellInfoWcdma) {
-                            CellSignalStrengthWcdma cellSignalStrengthWcdma = ((CellInfoWcdma) cellinfo).getCellSignalStrength();
-                            dbm = cellSignalStrengthWcdma.getDbm();
-                            signalStrength = "WCDMA";
-                        } else if (cellinfo instanceof CellInfoGsm) {
-                            CellSignalStrengthGsm cellSignalStrengthGsm = ((CellInfoGsm) cellinfo).getCellSignalStrength();
-                            dbm = cellSignalStrengthGsm.getDbm();
-                            signalStrength = "GSM";
-                        } else if (cellinfo instanceof CellInfoLte) {
-                            CellSignalStrengthLte cellSignalStrengthLte = ((CellInfoLte) cellinfo).getCellSignalStrength();
-                            signalStrength = "LTE";
-                            dbm = cellSignalStrengthLte.getDbm();
-                        }
-                        signalStrength = signalStrength + " : " + dbm;
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        sub.onNext(signalStrength);
-                        sub.onCompleted();
+    public static Single<String> signal(final Context context) {
+        return Single.create(new Single.OnSubscribe<String>() {
+            @Override
+            public void call(SingleSubscriber<? super String> sub) {
+                String signalStrength = new String();
+                try {
+                    TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                    CellInfo cellinfo = telephonyManager.getAllCellInfo().get(0);
+                    int dbm = -666;
+                    if (cellinfo instanceof CellInfoWcdma) {
+                        CellSignalStrengthWcdma cellSignalStrengthWcdma = ((CellInfoWcdma) cellinfo).getCellSignalStrength();
+                        dbm = cellSignalStrengthWcdma.getDbm();
+                        signalStrength = "WCDMA";
+                    } else if (cellinfo instanceof CellInfoGsm) {
+                        CellSignalStrengthGsm cellSignalStrengthGsm = ((CellInfoGsm) cellinfo).getCellSignalStrength();
+                        dbm = cellSignalStrengthGsm.getDbm();
+                        signalStrength = "GSM";
+                    } else if (cellinfo instanceof CellInfoLte) {
+                        CellSignalStrengthLte cellSignalStrengthLte = ((CellInfoLte) cellinfo).getCellSignalStrength();
+                        signalStrength = "LTE";
+                        dbm = cellSignalStrengthLte.getDbm();
                     }
+                    signalStrength = signalStrength + " : " + dbm;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    sub.onSuccess(signalStrength);
+                }
             }
         });
-        return observable;
     }
 
-    public static Observable<String> bandwidth(final Context context) {
-        Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
+    public static Single<String> bandwidth() {
+        return Single.create(new Single.OnSubscribe<String>() {
             @Override
-            public void call(Subscriber<? super String> sub) {
-                String ratevalue = new String();
+            public void call(SingleSubscriber<? super String> sub) {
+                String ratevalue = "";
                 try {
                     String fiveMbFile = "http://d1355990.i49.quadrahosting.com.au/2012_06/M16&M17_NII.jpg";
                     URL url = new URL(fiveMbFile);
@@ -145,11 +142,10 @@ public class Sources {
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    sub.onNext(ratevalue);
-                    sub.onCompleted();
+
+                    sub.onSuccess(ratevalue);
                 }
             }
         });
-        return observable;
     }
 }
