@@ -16,7 +16,8 @@ import rx.Observable;
 
 public interface RestAPI {
 
-    String BASE_URL = "REPLACE";
+    String BASE_URL = "REPLACE"; // format is "www.google.com"
+    String API = "http://"+BASE_URL+"REPLACE"; //format is ":{port}/{apiEndpoint}/"
 
     @POST("record")
     Observable<String> record(@Body String data);
@@ -24,7 +25,7 @@ public interface RestAPI {
     class Factory {
         public static RestAPI create() {
             Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
+                    .baseUrl(API)
                     .addConverterFactory(GsonConverterFactory.create())
                     .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                     .build();

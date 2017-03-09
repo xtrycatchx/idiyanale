@@ -33,6 +33,7 @@ public class NetworkHelper {
 
 
         Single<Connectivity> o1 = ReactiveNetwork.observeNetworkConnectivity(context).first().toSingle();
+
         LocationRequest request = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setNumUpdates(1)

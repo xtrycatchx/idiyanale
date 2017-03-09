@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -24,6 +25,11 @@ import com.orozco.netreport.utils.SharedPrefUtil;
 import com.skyfishjy.library.RippleBackground;
 
 
+import java.io.IOError;
+import java.io.IOException;
+
+import java.net.InetAddress;
+
 import butterknife.BindView;
 import butterknife.OnClick;
 
@@ -39,6 +45,7 @@ import javax.inject.Inject;
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_PHONE_STATE;
+import static android.Manifest.permission.RESTART_PACKAGES;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
@@ -110,7 +117,27 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivityComponent().inject(this);
-        SharedPrefUtil.createTempData(this);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if(isConnected()) {
+                        Data savedData = SharedPrefUtil.retrieveTempData(MainActivity.this);
+                        if(savedData != null) {
+                            postToServer(savedData);
+                        }
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+
+
+
         mainView.setButtonVisibility(View.INVISIBLE);
         buttonSubscription = getButtonSubscription();
     }
@@ -192,18 +219,22 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mainView.setButtonVisibility(View.INVISIBLE);
-                rippleBackground.stopRippleAnimation();
-                centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
+                resetView();
             }
         });
+    }
+
+    public void resetView() {
+        mainView.setButtonVisibility(View.INVISIBLE);
+        rippleBackground.stopRippleAnimation();
+        centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
     }
 
     @Override
     public void displayResults(final Data results) {
 
         mainView.setText("GONNA CHANGE THIS LATER");
-        presenter.stopTest();
+
         rippleBackground.stopRippleAnimation();
         centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
         SharedPrefUtil.saveTempData(this, results);
@@ -213,7 +244,15 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     @OnClick(R.id.reportBtn)
     public void onReportSubmit() {
 
-        final Data data = SharedPrefUtil.retrieveTempData(this);
+        Data data = SharedPrefUtil.retrieveTempData(this);
+        if(data != null) {
+            postToServer(data);
+        }
+
+
+    }
+
+    public void postToServer(final Data data) {
         getRestApi().record(new Gson().toJson(data)).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<String>() {
                     @Override
@@ -245,6 +284,8 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                             }
                         });
                         builder.show();
+                        SharedPrefUtil.clearTempData(MainActivity.this);
+                        resetView();
                     }
                 });
     }
@@ -260,5 +301,17 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             restApi = RestAPI.Factory.create();
         }
         return restApi;
+    }
+
+    public boolean isConnected()  {
+        try {
+            InetAddress ipAddr = InetAddress.getByName(RestAPI.BASE_URL);
+            Log.d("isConnected",ipAddr.toString());
+            return !ipAddr.equals("");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
