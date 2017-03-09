@@ -45,7 +45,6 @@ import javax.inject.Inject;
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_PHONE_STATE;
-import static android.Manifest.permission.RESTART_PACKAGES;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
