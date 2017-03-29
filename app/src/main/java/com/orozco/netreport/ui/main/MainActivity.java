@@ -233,7 +233,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     @Override
     public void displayResults(final Data results) {
 
-        mainView.setText("GONNA CHANGE THIS LATER");
+        mainView.setText("TAP HERE TO REPORT DATA");
 
         rippleBackground.stopRippleAnimation();
         centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));

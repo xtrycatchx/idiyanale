@@ -5,7 +5,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
-import com.orozco.netreport.Idiyanale;
+import com.orozco.netreport.BASS;
 import com.orozco.netreport.inject.ActivityComponent;
 import com.orozco.netreport.inject.ActivityModule;
 import com.orozco.netreport.inject.ApplicationComponent;
@@ -25,12 +25,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedState);
         setContentView(getLayoutRes());
         ButterKnife.bind(this);
-        checkForUpdates();
     }
 
     protected ActivityComponent getActivityComponent() {
         ApplicationComponent applicationComponent =
-                ((Idiyanale) getApplication()).getApplicationComponent();
+                ((BASS) getApplication()).getApplicationComponent();
         return applicationComponent.plus(new ActivityModule(this));
     }
 
