@@ -275,6 +275,11 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                                 MainActivity.this);
                         builder.setTitle("Success, Thank you");
                         StringBuilder sb = new StringBuilder();
+                        if(!isNullOrEmpty(data.getOperator())) {
+                            sb.append("Provider : ");
+                            sb.append(data.getOperator());
+                            sb.append("\n");
+                        }
                         if(!isNullOrEmpty(data.getBandwidth())) {
                             sb.append("Bandwidth : ");
                             sb.append(data.getBandwidth());
