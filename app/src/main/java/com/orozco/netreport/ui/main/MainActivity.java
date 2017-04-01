@@ -273,16 +273,31 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                     public void onNext(String response) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(
                                 MainActivity.this);
-                        builder.setTitle("Data Reported");
-                        builder.setMessage(response);
-                        builder.setPositiveButton("See Data Reported", new DialogInterface.OnClickListener() {
+                        builder.setTitle("Success, Thank you");
+                        StringBuilder sb = new StringBuilder();
+                        if(!isNullOrEmpty(data.getBandwidth())) {
+                            sb.append("Bandwidth : ");
+                            sb.append(data.getBandwidth());
+                            sb.append("\n");
+                        }
+                        if(!isNullOrEmpty(data.getSignal())) {
+                            sb.append("Signal : ");
+                            sb.append(data.getSignal());
+                        }
+                        builder.setMessage(sb.toString());
+                        builder.setPositiveButton("Test Again", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                new AlertDialog.Builder(
-                                        MainActivity.this)
-                                        .setMessage(new GsonBuilder().setPrettyPrinting().create().toJson(data)).show();
+
+                                centerImage.callOnClick();
+
+
+                                //new AlertDialog.Builder(
+                                //        MainActivity.this)
+                                //        .setMessage(new GsonBuilder().setPrettyPrinting().create().toJson(data)).show();
                             }
                         });
+                        builder.setCancelable(true);
                         builder.show();
                         SharedPrefUtil.clearTempData(MainActivity.this);
                         resetView();
@@ -313,5 +328,10 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             e.printStackTrace();
             return false;
         }
+    }
+
+    //move to some utils soon
+    public boolean isNullOrEmpty(String str) {
+        return str == null || str.trim().length() == 0;
     }
 }
