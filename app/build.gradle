@@ -13,20 +13,32 @@ android {
 
     defaultConfig {
         applicationId 'com.orozco.netreport'
-        minSdkVersion 22
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
     }
-    buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+    //buildTypes {
+    //    release {
+    //        minifyEnabled true
+            //proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    //    }
+    //}
+
+    lintOptions {
+        disable "ResourceType"
     }
+
+    packagingOptions {
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+    }
+
+    //defaultConfig {
+    //    multiDexEnabled true
+    //}
 }
 
 dependencies {
