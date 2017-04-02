@@ -6,14 +6,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.github.pwittchen.reactivewifi.AccessRequester;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.jakewharton.rxbinding.view.RxView;
 import com.orozco.netreport.R;
 
@@ -21,12 +19,9 @@ import com.orozco.netreport.model.Data;
 
 import com.orozco.netreport.post.api.RestAPI;
 import com.orozco.netreport.ui.BaseActivity;
+import com.orozco.netreport.utils.CommonUtil;
 import com.orozco.netreport.utils.SharedPrefUtil;
 import com.skyfishjy.library.RippleBackground;
-
-
-import java.io.IOError;
-import java.io.IOException;
 
 import java.net.InetAddress;
 
@@ -45,7 +40,6 @@ import javax.inject.Inject;
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_PHONE_STATE;
-import static android.Manifest.permission.RESTART_PACKAGES;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
@@ -55,7 +49,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
-    private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001; //arbitrary int
+    private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001;
 
     @Inject
     MainPresenter presenter;
@@ -135,9 +129,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             }
         }).start();
 
-
-
-
         mainView.setButtonVisibility(View.INVISIBLE);
         buttonSubscription = getButtonSubscription();
     }
@@ -147,7 +138,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             @Override
             public void call(Void aVoid) {
                 if (rippleBackground.isRippleAnimationRunning()) {
-
                     endTest();
                 } else {
                     mainView.setButtonVisibility(View.INVISIBLE);
@@ -208,13 +198,11 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             return;
         }
 
-
         presenter.startTest(this, MainActivity.this);
     }
 
     @Override
     public void endTest() {
-
         presenter.stopTest();
         runOnUiThread(new Runnable() {
             @Override
@@ -232,9 +220,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     @Override
     public void displayResults(final Data results) {
-
-        mainView.setText("TAP HERE TO REPORT DATA");
-
+        mainView.setText(getString(R.string.reportLabel));
         rippleBackground.stopRippleAnimation();
         centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
         SharedPrefUtil.saveTempData(this, results);
@@ -248,7 +234,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         if(data != null) {
             postToServer(data);
         }
-
 
     }
 
@@ -273,33 +258,27 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                     public void onNext(String response) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(
                                 MainActivity.this);
-                        builder.setTitle("Success, Thank you");
+                        builder.setTitle(getString(R.string.successTitle));
                         StringBuilder sb = new StringBuilder();
-                        if(!isNullOrEmpty(data.getOperator())) {
-                            sb.append("Provider : ");
+                        if(!CommonUtil.isNullOrEmpty(data.getOperator())) {
+                            sb.append(getString(R.string.provider));
                             sb.append(data.getOperator());
                             sb.append("\n");
                         }
-                        if(!isNullOrEmpty(data.getBandwidth())) {
-                            sb.append("Bandwidth : ");
+                        if(!CommonUtil.isNullOrEmpty(data.getBandwidth())) {
+                            sb.append(getString(R.string.bandwidth));
                             sb.append(data.getBandwidth());
                             sb.append("\n");
                         }
-                        if(!isNullOrEmpty(data.getSignal())) {
-                            sb.append("Signal : ");
+                        if(!CommonUtil.isNullOrEmpty(data.getSignal())) {
+                            sb.append(getString(R.string.signal));
                             sb.append(data.getSignal());
                         }
                         builder.setMessage(sb.toString());
-                        builder.setPositiveButton("Test Again", new DialogInterface.OnClickListener() {
+                        builder.setPositiveButton(getString(R.string.testAgain), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-
                                 centerImage.callOnClick();
-
-
-                                //new AlertDialog.Builder(
-                                //        MainActivity.this)
-                                //        .setMessage(new GsonBuilder().setPrettyPrinting().create().toJson(data)).show();
                             }
                         });
                         builder.setCancelable(true);
@@ -326,17 +305,11 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     public boolean isConnected()  {
         try {
             InetAddress ipAddr = InetAddress.getByName(RestAPI.BASE_URL);
-            Log.d("isConnected",ipAddr.toString());
             return !ipAddr.equals("");
         }
         catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-    }
-
-    //move to some utils soon
-    public boolean isNullOrEmpty(String str) {
-        return str == null || str.trim().length() == 0;
     }
 }

@@ -9,8 +9,6 @@ import com.orozco.netreport.inject.DaggerApplicationComponent;
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
  *
- * BASS - A Filipino goddess of labor and good deeds. Just naming the app after her
- *
  */
 
 public class BASS extends Application {

@@ -4,7 +4,6 @@ import com.orozco.netreport.inject.PerApplication;
 
 import javax.inject.Inject;
 
-import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
 import rx.android.schedulers.AndroidSchedulers;
