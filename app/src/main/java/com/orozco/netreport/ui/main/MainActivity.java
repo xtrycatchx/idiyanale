@@ -24,6 +24,7 @@ import com.orozco.netreport.utils.SharedPrefUtil;
 import com.skyfishjy.library.RippleBackground;
 
 import java.net.InetAddress;
+import java.net.URI;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -304,7 +305,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     public boolean isConnected()  {
         try {
-            InetAddress ipAddr = InetAddress.getByName(RestAPI.BASE_URL);
+            InetAddress ipAddr = InetAddress.getByName(URI.create(RestAPI.BASE_URL).getHost());
             return !ipAddr.equals("");
         }
         catch (Exception e) {
