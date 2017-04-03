@@ -8,7 +8,6 @@ import com.orozco.netreport.model.Data;
 
 import javax.inject.Inject;
 
-import rx.Observable;
 import rx.Single;
 
 /**

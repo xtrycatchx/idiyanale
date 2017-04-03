@@ -2,8 +2,6 @@ package com.orozco.netreport.model;
 
 import android.content.Context;
 import android.net.TrafficStats;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
@@ -19,10 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-import rx.Observable;
 import rx.Single;
 import rx.SingleSubscriber;
-import rx.Subscriber;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 12/2/17.

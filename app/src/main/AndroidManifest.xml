@@ -13,7 +13,7 @@
 
 
     <application
-        android:name=".Idiyanale"
+        android:name=".BASS"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup"
         android:icon="@mipmap/ic_launcher"
@@ -25,7 +25,6 @@
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <meta-data android:name="net.hockeyapp.android.appIdentifier" android:value="${HOCKEYAPP_APP_ID}" />
 
         <activity
             android:name=".ui.main.MainActivity"

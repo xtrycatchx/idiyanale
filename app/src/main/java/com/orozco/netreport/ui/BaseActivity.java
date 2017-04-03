@@ -5,13 +5,12 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
-import com.orozco.netreport.Idiyanale;
+import com.orozco.netreport.BASS;
 import com.orozco.netreport.inject.ActivityComponent;
 import com.orozco.netreport.inject.ActivityModule;
 import com.orozco.netreport.inject.ApplicationComponent;
 
-import net.hockeyapp.android.CrashManager;
-import net.hockeyapp.android.UpdateManager;
+
 
 import butterknife.ButterKnife;
 
@@ -26,12 +25,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedState);
         setContentView(getLayoutRes());
         ButterKnife.bind(this);
-        checkForUpdates();
     }
 
     protected ActivityComponent getActivityComponent() {
         ApplicationComponent applicationComponent =
-                ((Idiyanale) getApplication()).getApplicationComponent();
+                ((BASS) getApplication()).getApplicationComponent();
         return applicationComponent.plus(new ActivityModule(this));
     }
 
@@ -41,30 +39,19 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        checkForCrashes();
+
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        unregisterManagers();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterManagers();
+
     }
 
-    private void checkForCrashes() {
-        CrashManager.register(this);
-    }
 
-    private void checkForUpdates() {
-        UpdateManager.register(this);
-    }
-
-    private void unregisterManagers() {
-        UpdateManager.unregister();
-    }
 }

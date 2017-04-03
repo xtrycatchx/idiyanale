@@ -3,16 +3,16 @@ package com.orozco.netreport.inject;
 import android.content.Context;
 import android.content.res.Resources;
 
-import com.orozco.netreport.Idiyanale;
+import com.orozco.netreport.BASS;
 
 import dagger.Module;
 import dagger.Provides;
 
 @Module
 public class ApplicationModule {
-    private final Idiyanale application;
+    private final BASS application;
 
-    public ApplicationModule(Idiyanale application) {
+    public ApplicationModule(BASS application) {
         this.application = application;
     }
 

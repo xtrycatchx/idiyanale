@@ -6,14 +6,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.github.pwittchen.reactivewifi.AccessRequester;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.jakewharton.rxbinding.view.RxView;
 import com.orozco.netreport.R;
 
@@ -21,12 +19,9 @@ import com.orozco.netreport.model.Data;
 
 import com.orozco.netreport.post.api.RestAPI;
 import com.orozco.netreport.ui.BaseActivity;
+import com.orozco.netreport.utils.CommonUtil;
 import com.orozco.netreport.utils.SharedPrefUtil;
 import com.skyfishjy.library.RippleBackground;
-
-
-import java.io.IOError;
-import java.io.IOException;
 
 import java.net.InetAddress;
 
@@ -54,7 +49,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
-    private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001; //arbitrary int
+    private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001;
 
     @Inject
     MainPresenter presenter;
@@ -134,9 +129,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             }
         }).start();
 
-
-
-
         mainView.setButtonVisibility(View.INVISIBLE);
         buttonSubscription = getButtonSubscription();
     }
@@ -146,7 +138,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             @Override
             public void call(Void aVoid) {
                 if (rippleBackground.isRippleAnimationRunning()) {
-
                     endTest();
                 } else {
                     mainView.setButtonVisibility(View.INVISIBLE);
@@ -207,13 +198,11 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             return;
         }
 
-
         presenter.startTest(this, MainActivity.this);
     }
 
     @Override
     public void endTest() {
-
         presenter.stopTest();
         runOnUiThread(new Runnable() {
             @Override
@@ -231,9 +220,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     @Override
     public void displayResults(final Data results) {
-
-        mainView.setText("GONNA CHANGE THIS LATER");
-
+        mainView.setText(getString(R.string.reportLabel));
         rippleBackground.stopRippleAnimation();
         centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
         SharedPrefUtil.saveTempData(this, results);
@@ -247,7 +234,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         if(data != null) {
             postToServer(data);
         }
-
 
     }
 
@@ -272,16 +258,30 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                     public void onNext(String response) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(
                                 MainActivity.this);
-                        builder.setTitle("Data Reported");
-                        builder.setMessage(response);
-                        builder.setPositiveButton("See Data Reported", new DialogInterface.OnClickListener() {
+                        builder.setTitle(getString(R.string.successTitle));
+                        StringBuilder sb = new StringBuilder();
+                        if(!CommonUtil.isNullOrEmpty(data.getOperator())) {
+                            sb.append(getString(R.string.provider));
+                            sb.append(data.getOperator());
+                            sb.append("\n");
+                        }
+                        if(!CommonUtil.isNullOrEmpty(data.getBandwidth())) {
+                            sb.append(getString(R.string.bandwidth));
+                            sb.append(data.getBandwidth());
+                            sb.append("\n");
+                        }
+                        if(!CommonUtil.isNullOrEmpty(data.getSignal())) {
+                            sb.append(getString(R.string.signal));
+                            sb.append(data.getSignal());
+                        }
+                        builder.setMessage(sb.toString());
+                        builder.setPositiveButton(getString(R.string.testAgain), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                new AlertDialog.Builder(
-                                        MainActivity.this)
-                                        .setMessage(new GsonBuilder().setPrettyPrinting().create().toJson(data)).show();
+                                centerImage.callOnClick();
                             }
                         });
+                        builder.setCancelable(true);
                         builder.show();
                         SharedPrefUtil.clearTempData(MainActivity.this);
                         resetView();
@@ -305,7 +305,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     public boolean isConnected()  {
         try {
             InetAddress ipAddr = InetAddress.getByName(RestAPI.BASE_URL);
-            Log.d("isConnected",ipAddr.toString());
             return !ipAddr.equals("");
         }
         catch (Exception e) {

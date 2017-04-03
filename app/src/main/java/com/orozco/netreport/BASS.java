@@ -9,11 +9,9 @@ import com.orozco.netreport.inject.DaggerApplicationComponent;
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
  *
- * Idiyanale - A Filipino goddess of labor and good deeds. Just naming the app after her
- *
  */
 
-public class Idiyanale extends Application {
+public class BASS extends Application {
 
     private ApplicationComponent appComponent;
 

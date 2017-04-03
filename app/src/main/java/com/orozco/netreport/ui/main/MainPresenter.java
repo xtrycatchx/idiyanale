@@ -8,9 +8,7 @@ import com.orozco.netreport.model.Data;
 
 import javax.inject.Inject;
 
-import rx.Single;
 import rx.SingleSubscriber;
-import rx.Subscriber;
 import rx.subscriptions.CompositeSubscription;
 
 /**
@@ -58,9 +56,7 @@ public class MainPresenter {
 
     public interface View {
         void beginTest();
-
         void endTest();
-
         void displayResults(Data result);
     }
 }
