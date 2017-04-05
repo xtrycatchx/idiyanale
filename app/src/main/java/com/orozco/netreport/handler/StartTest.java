@@ -1,14 +1,9 @@
 package com.orozco.netreport.handler;
 
-import android.content.Context;
-
 import com.orozco.netreport.common.Schedulers;
 import com.orozco.netreport.handler.network.NetworkHelper;
-import com.orozco.netreport.model.Data;
 
 import javax.inject.Inject;
-
-import rx.Single;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
@@ -22,9 +17,5 @@ public class StartTest {
     public StartTest(Schedulers schedulers, NetworkHelper helper) {
         this.schedulers = schedulers;
         this.helper = helper;
-    }
-
-    public Single<Data> execute(Context context) {
-        return helper.executeNetworkTest(context).compose(schedulers.<Data>apply());
     }
 }
