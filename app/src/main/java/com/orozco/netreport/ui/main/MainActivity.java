@@ -36,6 +36,8 @@ import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_F;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_S;
+import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_SEND_DATA_F;
+import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_SEND_DATA_S;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
@@ -100,6 +102,32 @@ public class MainActivity extends BaseActivity {
 //                            }
                             // Remove this once server is up
                             displayResults(store.getData());
+                        }, throwable -> resetView())
+        );
+
+        addSubscriptionToUnsubscribe(
+                mDataCollectionStore.observable()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .filter(store -> ACTION_SEND_DATA_S.equals(store.getAction()) ||
+                                ACTION_SEND_DATA_F.equals(store.getAction()))
+                        .subscribe(store -> {
+                            if (store.getError() != null) {
+                                new AlertDialog.Builder(this)
+                                        .setTitle(R.string.successTitle)
+                                        .setMessage(store.getData().toString(this))
+                                        .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
+                                        .setCancelable(true)
+                                        .show();
+
+                                // TODO: Don't treat shared prefs as database
+                                SharedPrefUtil.clearTempData(this);
+                                resetView();
+                            } else {
+                                new AlertDialog.Builder(this)
+                                    .setTitle("Error : " + store.getError().getStatusCode())
+                                    .setMessage(store.getError().getErrorMessage())
+                                    .show();
+                            }
                         }, throwable -> resetView())
         );
     }
@@ -181,39 +209,7 @@ public class MainActivity extends BaseActivity {
     }
 
     public void postToServer(final Data data) {
-
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.successTitle)
-                .setMessage(data.toString(this))
-                .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
-                .setCancelable(true)
-                .show();
-
-        // TODO: Don't treat shared prefs as database
-        SharedPrefUtil.clearTempData(this);
-        resetView();
-        return;
-        // TODO: Disable for now
-//        restApi.record(data)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(response -> {
-//                    new AlertDialog.Builder(this)
-//                            .setTitle(R.string.successTitle)
-//                            .setMessage(data.toString(this))
-//                            .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
-//                            .setCancelable(true)
-//                            .show();
-//
-//                    // TODO: Don't treat shared prefs as database
-//                    SharedPrefUtil.clearTempData(this);
-//                    resetView();
-//                }, e -> {
-//                    new AlertDialog.Builder(this)
-//                            .setTitle("Error : " + e.getMessage())
-//                            .setMessage(e.getMessage())
-//                            .show();
-//                });
+        mDataCollectionActionCreator.sendData(data);
     }
 
     // TODO: Can be improved

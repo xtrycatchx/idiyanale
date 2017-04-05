@@ -9,6 +9,8 @@ import rx.Observable;
 
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_F;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_S;
+import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_SEND_DATA_F;
+import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_SEND_DATA_S;
 
 /**
  * @author A-Ar Andrew Concepcion
@@ -45,6 +47,8 @@ public class DataCollectionStore extends Store<DataCollectionStore> {
         switch (action.type()) {
             case ACTION_COLLECT_DATA_S:
             case ACTION_COLLECT_DATA_F:
+            case ACTION_SEND_DATA_S:
+            case ACTION_SEND_DATA_F:
                 updateState();
                 updateData(action);
                 updateError(action);

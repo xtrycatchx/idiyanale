@@ -6,6 +6,7 @@ import android.location.Location;
 import com.github.pwittchen.reactivenetwork.library.Connectivity;
 import com.github.pwittchen.reactivenetwork.library.ReactiveNetwork;
 import com.google.android.gms.location.LocationRequest;
+import com.google.gson.Gson;
 import com.orozco.netreport.model.Data;
 import com.orozco.netreport.model.Device;
 import com.orozco.netreport.model.Sources;
@@ -62,7 +63,7 @@ public class DataCollectionModel {
                 .onErrorReturn(throwable -> currentData); // do not be dependent on location and bandwidth, if it causes an error, still send some data
     }
 
-    public Observable<Data> sendData(Data data) {
-        return mRestApi.record(data);
+    public Observable<Void> sendData(Data data) {
+        return mRestApi.record(new Gson().toJson(data));
     }
 }
