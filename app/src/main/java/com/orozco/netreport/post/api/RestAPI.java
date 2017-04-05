@@ -1,8 +1,7 @@
 package com.orozco.netreport.post.api;
 
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
-import retrofit2.converter.gson.GsonConverterFactory;
+import com.orozco.netreport.model.Data;
+
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 import rx.Observable;
@@ -13,19 +12,9 @@ import rx.Observable;
 
 public interface RestAPI {
 
-    String BASE_URL = "endpoint here";
+    String BASE_URL = "http://localhost:3000";
 
     @POST("record")
-    Observable<String> record(@Body String data);
+    Observable<Data> record(@Body Data data);
 
-    class Factory {
-        public static RestAPI create() {
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                    .build();
-            return retrofit.create(RestAPI.class);
-        }
-    }
 }
