@@ -1,42 +1,35 @@
 package com.orozco.netreport.ui.main;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.github.pwittchen.reactivewifi.AccessRequester;
-
-import com.google.gson.Gson;
 import com.jakewharton.rxbinding.view.RxView;
 import com.orozco.netreport.R;
-
 import com.orozco.netreport.model.Data;
-
 import com.orozco.netreport.post.api.RestAPI;
 import com.orozco.netreport.ui.BaseActivity;
-import com.orozco.netreport.utils.CommonUtil;
 import com.orozco.netreport.utils.SharedPrefUtil;
 import com.skyfishjy.library.RippleBackground;
 
 import java.net.InetAddress;
 import java.net.URI;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.OnClick;
-
-import rx.Subscriber;
+import rx.Observable;
+import rx.Single;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-
 import rx.schedulers.Schedulers;
-
-import javax.inject.Inject;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -52,19 +45,11 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
     private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001;
 
-    @Inject
-    MainPresenter presenter;
-
-    @BindView(R.id.main_view)
-    MainView mainView;
-
-    @BindView(R.id.centerImage)
-    ImageView centerImage;
-
-    @BindView(R.id.content)
-    RippleBackground rippleBackground;
-
-    private RestAPI restApi;
+    @Inject MainPresenter presenter;
+    @Inject RestAPI restApi;
+    @BindView(R.id.main_view) MainView mainView;
+    @BindView(R.id.centerImage) ImageView centerImage;
+    @BindView(R.id.content) RippleBackground rippleBackground;
 
     @Override
     public void onResume() {
@@ -113,49 +98,37 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         super.onCreate(savedInstanceState);
         getActivityComponent().inject(this);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if(isConnected()) {
-                        Data savedData = SharedPrefUtil.retrieveTempData(MainActivity.this);
-                        if(savedData != null) {
-                            postToServer(savedData);
-                        }
-
+        isConnected()
+                .subscribe(isConnected -> {
+                    Data savedData = SharedPrefUtil.retrieveTempData(this);
+                    if(savedData != null) {
+                        postToServer(savedData);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+                }, throwable -> {
+
+                });
 
         mainView.setButtonVisibility(View.INVISIBLE);
         buttonSubscription = getButtonSubscription();
     }
 
     private Subscription getButtonSubscription() {
-        return RxView.clicks(centerImage).subscribe(new Action1<Void>() {
-            @Override
-            public void call(Void aVoid) {
-                if (rippleBackground.isRippleAnimationRunning()) {
-                    endTest();
-                } else {
-                    mainView.setButtonVisibility(View.INVISIBLE);
-                    centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
-                    rippleBackground.startRippleAnimation();
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            beginTest();
-                        }
-                    }).start();
-                }
+        return RxView.clicks(centerImage).subscribe(aVoid -> {
+            if (rippleBackground.isRippleAnimationRunning()) {
+                endTest();
+            } else {
+                mainView.setButtonVisibility(View.INVISIBLE);
+                centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
+                rippleBackground.startRippleAnimation();
+                new Thread(() -> {
+                    try {
+                        // TODO: Don't do this
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    beginTest();
+                }).start();
             }
         });
     }
@@ -188,13 +161,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         }
 
         if (!AccessRequester.isLocationEnabled(this)) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    AccessRequester.requestLocationAccess(MainActivity.this);
-
-                }
-            });
+            runOnUiThread(() -> AccessRequester.requestLocationAccess(this));
             endTest();
             return;
         }
@@ -205,12 +172,7 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     @Override
     public void endTest() {
         presenter.stopTest();
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                resetView();
-            }
-        });
+        runOnUiThread(this::resetView);
     }
 
     public void resetView() {
@@ -239,54 +201,43 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     }
 
     public void postToServer(final Data data) {
-        getRestApi().record(new Gson().toJson(data)).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<String>() {
-                    @Override
-                    public void onCompleted() {
-
+        // TODO: Don't do this here
+        restApi.record(data)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(response -> {
+                    StringBuilder sb = new StringBuilder();
+                    if(!TextUtils.isEmpty(data.getOperator())) {
+                        sb.append(getString(R.string.provider));
+                        sb.append(data.getOperator());
+                        sb.append("\n");
+                    }
+                    if(!TextUtils.isEmpty(data.getBandwidth())) {
+                        sb.append(getString(R.string.bandwidth));
+                        sb.append(data.getBandwidth());
+                        sb.append("\n");
+                    }
+                    if(!TextUtils.isEmpty(data.getSignal())) {
+                        sb.append(getString(R.string.signal));
+                        sb.append(data.getSignal());
                     }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(
-                                MainActivity.this);
-                        builder.setTitle("Error : " + e.getMessage());
-                        builder.setMessage(e.getMessage());
-                        builder.show();
-                    }
+                    new AlertDialog.Builder(this)
+                            .setTitle(R.string.successTitle)
+                            .setMessage(sb.toString())
+                            .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
+                            .setCancelable(true)
+                            .show();
 
-                    @Override
-                    public void onNext(String response) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(
-                                MainActivity.this);
-                        builder.setTitle(getString(R.string.successTitle));
-                        StringBuilder sb = new StringBuilder();
-                        if(!CommonUtil.isNullOrEmpty(data.getOperator())) {
-                            sb.append(getString(R.string.provider));
-                            sb.append(data.getOperator());
-                            sb.append("\n");
-                        }
-                        if(!CommonUtil.isNullOrEmpty(data.getBandwidth())) {
-                            sb.append(getString(R.string.bandwidth));
-                            sb.append(data.getBandwidth());
-                            sb.append("\n");
-                        }
-                        if(!CommonUtil.isNullOrEmpty(data.getSignal())) {
-                            sb.append(getString(R.string.signal));
-                            sb.append(data.getSignal());
-                        }
-                        builder.setMessage(sb.toString());
-                        builder.setPositiveButton(getString(R.string.testAgain), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                centerImage.callOnClick();
-                            }
-                        });
-                        builder.setCancelable(true);
-                        builder.show();
-                        SharedPrefUtil.clearTempData(MainActivity.this);
-                        resetView();
-                    }
+                    // TODO: Don't treat shared prefs as database
+                    SharedPrefUtil.clearTempData(this);
+                    resetView();
+                }, e -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(
+                            MainActivity.this);
+                    builder.setTitle("Error : " + e.getMessage());
+                    builder.setMessage(e.getMessage());
+                    builder.show();
                 });
     }
 
@@ -296,21 +247,11 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         presenter.stopTest();
     }
 
-    private RestAPI getRestApi() {
-        if (restApi == null) {
-            restApi = RestAPI.Factory.create();
-        }
-        return restApi;
-    }
-
-    public boolean isConnected()  {
-        try {
-            InetAddress ipAddr = InetAddress.getByName(URI.create(RestAPI.BASE_URL).getHost());
-            return !ipAddr.equals("");
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+    public Single<Boolean> isConnected()  {
+        return Observable.fromCallable(() -> InetAddress.getByName(URI.create(RestAPI.BASE_URL).getHost()))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(inetAddress -> inetAddress != null)
+                .toSingle();
     }
 }
