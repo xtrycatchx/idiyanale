@@ -5,13 +5,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.github.pwittchen.reactivewifi.AccessRequester;
-import com.jakewharton.rxbinding.view.RxView;
 import com.orozco.netreport.R;
+import com.orozco.netreport.flux.action.DataCollectionActionCreator;
+import com.orozco.netreport.flux.store.DataCollectionStore;
 import com.orozco.netreport.model.Data;
 import com.orozco.netreport.post.api.RestAPI;
 import com.orozco.netreport.ui.BaseActivity;
@@ -27,7 +27,6 @@ import butterknife.BindView;
 import butterknife.OnClick;
 import rx.Observable;
 import rx.Single;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -35,33 +34,23 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_F;
+import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_S;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 4/2/17.
  */
-
-public class MainActivity extends BaseActivity implements MainPresenter.View {
+public class MainActivity extends BaseActivity {
 
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
     private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001;
 
-    @Inject MainPresenter presenter;
+    @Inject DataCollectionActionCreator mDataCollectionActionCreator;
+    @Inject DataCollectionStore mDataCollectionStore;
     @Inject RestAPI restApi;
     @BindView(R.id.main_view) MainView mainView;
     @BindView(R.id.centerImage) ImageView centerImage;
     @BindView(R.id.content) RippleBackground rippleBackground;
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (buttonSubscription == null) {
-            buttonSubscription = getButtonSubscription();
-        }
-        else if(buttonSubscription.isUnsubscribed()) {
-            buttonSubscription = null;
-            buttonSubscription = getButtonSubscription();
-        }
-    }
 
     private void requestCoarseLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -78,25 +67,11 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        safelyUnsubscribe(buttonSubscription);
-    }
-
-    private void safelyUnsubscribe(Subscription... subscriptions) {
-        for (Subscription subscription : subscriptions) {
-            if (subscription != null && !subscription.isUnsubscribed()) {
-                subscription.unsubscribe();
-            }
-        }
-    }
-
-    Subscription buttonSubscription;
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivityComponent().inject(this);
+
+        initFlux();
 
         isConnected()
                 .subscribe(isConnected -> {
@@ -109,28 +84,44 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
                 });
 
         mainView.setButtonVisibility(View.INVISIBLE);
-        buttonSubscription = getButtonSubscription();
     }
 
-    private Subscription getButtonSubscription() {
-        return RxView.clicks(centerImage).subscribe(aVoid -> {
-            if (rippleBackground.isRippleAnimationRunning()) {
-                endTest();
-            } else {
-                mainView.setButtonVisibility(View.INVISIBLE);
-                centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
-                rippleBackground.startRippleAnimation();
-                new Thread(() -> {
-                    try {
-                        // TODO: Don't do this
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    beginTest();
-                }).start();
-            }
-        });
+    private void initFlux() {
+        addSubscriptionToUnsubscribe(
+                mDataCollectionStore.observable()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .filter(store -> ACTION_COLLECT_DATA_S.equals(store.getAction()) ||
+                                ACTION_COLLECT_DATA_F.equals(store.getAction()))
+                        .subscribe(store -> {
+                            resetView();
+                            // Uncomment this once server is up
+//                            if (store.getError() != null) {
+//                                displayResults(store.getData());
+//                            }
+                            // Remove this once server is up
+                            displayResults(store.getData());
+                        }, throwable -> resetView())
+        );
+    }
+
+    @OnClick(R.id.centerImage)
+    public void onCenterImageClicked() {
+        if (rippleBackground.isRippleAnimationRunning()) {
+            endTest();
+        } else {
+            mainView.setButtonVisibility(View.INVISIBLE);
+            centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
+            rippleBackground.startRippleAnimation();
+            new Thread(() -> {
+                try {
+                    // TODO: Don't do this
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                beginTest();
+            }).start();
+        }
     }
 
     @Override
@@ -138,16 +129,10 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         return R.layout.activity_main;
     }
 
-
-    @Override
     public void beginTest() {
-
-        boolean fineLocationPermissionNotGranted =
-                ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED;
-        boolean coarseLocationPermissionNotGranted =
-                ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED;
-        boolean phoneStatePermissionNotGranted =
-                ActivityCompat.checkSelfPermission(this, READ_PHONE_STATE) != PERMISSION_GRANTED;
+        boolean fineLocationPermissionNotGranted = ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED;
+        boolean coarseLocationPermissionNotGranted = ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED;
+        boolean phoneStatePermissionNotGranted = ActivityCompat.checkSelfPermission(this, READ_PHONE_STATE) != PERMISSION_GRANTED;
 
         if (fineLocationPermissionNotGranted && coarseLocationPermissionNotGranted) {
             requestCoarseLocationPermission();
@@ -166,12 +151,10 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
             return;
         }
 
-        presenter.startTest(this, MainActivity.this);
+        mDataCollectionActionCreator.collectData();
     }
 
-    @Override
     public void endTest() {
-        presenter.stopTest();
         runOnUiThread(this::resetView);
     }
 
@@ -181,7 +164,6 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
         centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
     }
 
-    @Override
     public void displayResults(final Data results) {
         mainView.setText(getString(R.string.reportLabel));
         rippleBackground.stopRippleAnimation();
@@ -192,61 +174,49 @@ public class MainActivity extends BaseActivity implements MainPresenter.View {
 
     @OnClick(R.id.reportBtn)
     public void onReportSubmit() {
-
         Data data = SharedPrefUtil.retrieveTempData(this);
         if(data != null) {
-            postToServer(data);
+            postToServer(mDataCollectionStore.getData());
         }
-
     }
 
     public void postToServer(final Data data) {
-        // TODO: Don't do this here
-        restApi.record(data)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(response -> {
-                    StringBuilder sb = new StringBuilder();
-                    if(!TextUtils.isEmpty(data.getOperator())) {
-                        sb.append(getString(R.string.provider));
-                        sb.append(data.getOperator());
-                        sb.append("\n");
-                    }
-                    if(!TextUtils.isEmpty(data.getBandwidth())) {
-                        sb.append(getString(R.string.bandwidth));
-                        sb.append(data.getBandwidth());
-                        sb.append("\n");
-                    }
-                    if(!TextUtils.isEmpty(data.getSignal())) {
-                        sb.append(getString(R.string.signal));
-                        sb.append(data.getSignal());
-                    }
 
-                    new AlertDialog.Builder(this)
-                            .setTitle(R.string.successTitle)
-                            .setMessage(sb.toString())
-                            .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
-                            .setCancelable(true)
-                            .show();
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.successTitle)
+                .setMessage(data.toString(this))
+                .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
+                .setCancelable(true)
+                .show();
 
-                    // TODO: Don't treat shared prefs as database
-                    SharedPrefUtil.clearTempData(this);
-                    resetView();
-                }, e -> {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(
-                            MainActivity.this);
-                    builder.setTitle("Error : " + e.getMessage());
-                    builder.setMessage(e.getMessage());
-                    builder.show();
-                });
+        // TODO: Don't treat shared prefs as database
+        SharedPrefUtil.clearTempData(this);
+        resetView();
+        return;
+        // TODO: Disable for now
+//        restApi.record(data)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(response -> {
+//                    new AlertDialog.Builder(this)
+//                            .setTitle(R.string.successTitle)
+//                            .setMessage(data.toString(this))
+//                            .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
+//                            .setCancelable(true)
+//                            .show();
+//
+//                    // TODO: Don't treat shared prefs as database
+//                    SharedPrefUtil.clearTempData(this);
+//                    resetView();
+//                }, e -> {
+//                    new AlertDialog.Builder(this)
+//                            .setTitle("Error : " + e.getMessage())
+//                            .setMessage(e.getMessage())
+//                            .show();
+//                });
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        presenter.stopTest();
-    }
-
+    // TODO: Can be improved
     public Single<Boolean> isConnected()  {
         return Observable.fromCallable(() -> InetAddress.getByName(URI.create(RestAPI.BASE_URL).getHost()))
                 .subscribeOn(Schedulers.io())

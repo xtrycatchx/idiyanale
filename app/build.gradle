@@ -4,6 +4,7 @@ apply plugin: 'me.tatarka.retrolambda'
 
 repositories {
     maven { url 'https://jitpack.io' }
+    mavenCentral()
 }
 
 android {
@@ -68,6 +69,7 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
 
+    apt 'com.google.auto.value:auto-value:1.2'
     compile 'com.google.code.gson:gson:2.6.1'
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
 
@@ -83,7 +85,5 @@ dependencies {
     compile 'io.reactivex:rxjava:1.1.6'
 
     compile 'com.skyfishjy.ripplebackground:library:1.0.1'
-
-
 
 }
