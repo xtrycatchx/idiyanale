@@ -1,12 +1,15 @@
 package com.orozco.netreport.ui.main;
 
 import android.app.AlertDialog;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.github.pwittchen.reactivewifi.AccessRequester;
 import com.orozco.netreport.R;
@@ -25,6 +28,7 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import cn.pedant.SweetAlert.SweetAlertDialog;
 import rx.Observable;
 import rx.Single;
 import rx.android.schedulers.AndroidSchedulers;
@@ -49,9 +53,11 @@ public class MainActivity extends BaseActivity {
     @Inject DataCollectionActionCreator mDataCollectionActionCreator;
     @Inject DataCollectionStore mDataCollectionStore;
     @Inject RestAPI restApi;
-    @BindView(R.id.main_view) MainView mainView;
+    @BindView(R.id.main_view) RelativeLayout mainView;
     @BindView(R.id.centerImage) ImageView centerImage;
     @BindView(R.id.content) RippleBackground rippleBackground;
+    @BindView(R.id.reportBtn) Button reportBtn;
+    private SweetAlertDialog pDialog;
 
     private void requestCoarseLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -84,7 +90,7 @@ public class MainActivity extends BaseActivity {
 
                 });
 
-        mainView.setButtonVisibility(View.INVISIBLE);
+        reportBtn.setVisibility(View.INVISIBLE);
     }
 
     private void initFlux() {
@@ -98,12 +104,18 @@ public class MainActivity extends BaseActivity {
                                     displayResults(store.getData());
                                     break;
                                 case ACTION_SEND_DATA_S:
-                                    new AlertDialog.Builder(this)
-                                            .setTitle(R.string.successTitle)
-                                            .setMessage(store.getData().toString(this))
-                                            .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
-                                            .setCancelable(true)
-                                            .show();
+                                    pDialog.setTitleText("Sent!")
+                                        .setContentText("Your data has been sent")
+                                        .setConfirmText("See my data")
+                                        .setConfirmClickListener(sweetAlertDialog -> {
+                                            sweetAlertDialog
+                                                    .setTitleText("Here's your data")
+                                                    .setConfirmText("Thanks! I'm done.")
+                                                    .setContentText(store.getData().toString())
+                                                    .setConfirmClickListener(SweetAlertDialog::dismissWithAnimation)
+                                                    .changeAlertType(SweetAlertDialog.NORMAL_TYPE);
+                                        })
+                                        .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
                                     // TODO: Don't treat shared prefs as database
                                     SharedPrefUtil.clearTempData(this);
                                     resetView();
@@ -126,7 +138,7 @@ public class MainActivity extends BaseActivity {
         if (rippleBackground.isRippleAnimationRunning()) {
             endTest();
         } else {
-            mainView.setButtonVisibility(View.INVISIBLE);
+            reportBtn.setVisibility(View.INVISIBLE);
             centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
             rippleBackground.startRippleAnimation();
             new Thread(() -> {
@@ -176,13 +188,13 @@ public class MainActivity extends BaseActivity {
     }
 
     public void resetView() {
-        mainView.setButtonVisibility(View.INVISIBLE);
+        reportBtn.setVisibility(View.INVISIBLE);
         rippleBackground.stopRippleAnimation();
         centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
     }
 
     public void displayResults(final Data results) {
-        mainView.setText(getString(R.string.reportLabel));
+        reportBtn.setVisibility(View.VISIBLE);
         rippleBackground.stopRippleAnimation();
         centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
         SharedPrefUtil.saveTempData(this, results);
@@ -198,6 +210,11 @@ public class MainActivity extends BaseActivity {
     }
 
     public void postToServer(final Data data) {
+        pDialog = new SweetAlertDialog(this, SweetAlertDialog.PROGRESS_TYPE);
+        pDialog.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
+        pDialog.setTitleText("Loading");
+        pDialog.setCancelable(false);
+        pDialog.show();
         mDataCollectionActionCreator.sendData(data);
     }
 
@@ -208,5 +225,13 @@ public class MainActivity extends BaseActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(inetAddress -> inetAddress != null)
                 .toSingle();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (pDialog != null && pDialog.isShowing()) {
+            pDialog.dismiss();
+        }
     }
 }

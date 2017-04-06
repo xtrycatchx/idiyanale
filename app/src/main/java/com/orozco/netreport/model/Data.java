@@ -164,14 +164,12 @@ public class Data {
 
     @Override
     public String toString() {
-        return "Data{" +
-                "connectivity=" + connectivity +
-                ", location=" + location +
-                ", operator='" + operator + '\'' +
-                ", device=" + device +
-                ", imei='" + imei + '\'' +
-                ", signal='" + signal + '\'' +
-                ", bandwidth='" + bandwidth + '\'' +
-                '}';
+        return "Data {" +
+                "\nconnectivity=" + connectivity.getTypeName() +
+                "\noperator='" + operator + '\'' +
+                "\nimei='" + imei + '\'' +
+                "\nsignal='" + signal + '\'' +
+                "\nbandwidth='" + bandwidth + '\'' +
+                "\n}";
     }
 }
