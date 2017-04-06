@@ -1,9 +1,5 @@
 package com.orozco.netreport.flux;
 
-import android.util.Log;
-
-import com.google.firebase.crash.FirebaseCrash;
-
 import retrofit2.Response;
 import retrofit2.adapter.rxjava.HttpException;
 
@@ -15,8 +11,8 @@ public class Utils {
     public static final String MSG_ERROR_NETWORK = "No network connection.";
 
     public AppError getError(Throwable throwable) {
-        FirebaseCrash.logcat(Log.ERROR, "FLUX ERROR", throwable.getMessage());
-        FirebaseCrash.report(throwable);
+//        FirebaseCrash.logcat(Log.ERROR, "FLUX ERROR", throwable.getMessage());
+//        FirebaseCrash.report(throwable);
         if (!(throwable instanceof HttpException)) {
             return AppError.createNetwork(MSG_ERROR_NETWORK);
         }
