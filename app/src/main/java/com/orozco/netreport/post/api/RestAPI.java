@@ -10,9 +10,9 @@ import rx.Observable;
 
 public interface RestAPI {
 
-    String BASE_URL = "https://bass.bnshosting.net/api";
+    String BASE_URL = "https://bass.bnshosting.net/api/";
 
-    @POST("/record")
+    @POST("record")
     Observable<Void> record(@Body String data);
 
 }

@@ -34,6 +34,8 @@ public class DataCollectionActionCreator {
     @StringDef(value = {
             ACTION_COLLECT_DATA_S,
             ACTION_COLLECT_DATA_F,
+            ACTION_SEND_DATA_S,
+            ACTION_SEND_DATA_F
     })
     @Retention(SOURCE)
     public @interface DataCollectionAction {

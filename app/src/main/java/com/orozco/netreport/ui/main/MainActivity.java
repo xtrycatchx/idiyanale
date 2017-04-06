@@ -34,7 +34,6 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_F;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_S;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_SEND_DATA_F;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_SEND_DATA_S;
@@ -92,42 +91,32 @@ public class MainActivity extends BaseActivity {
         addSubscriptionToUnsubscribe(
                 mDataCollectionStore.observable()
                         .observeOn(AndroidSchedulers.mainThread())
-                        .filter(store -> ACTION_COLLECT_DATA_S.equals(store.getAction()) ||
-                                ACTION_COLLECT_DATA_F.equals(store.getAction()))
                         .subscribe(store -> {
-                            resetView();
-                            // Uncomment this once server is up
-//                            if (store.getError() != null) {
-//                                displayResults(store.getData());
-//                            }
-                            // Remove this once server is up
-                            displayResults(store.getData());
-                        }, throwable -> resetView())
-        );
+                            switch (store.getAction()) {
+                                case ACTION_COLLECT_DATA_S:
+                                    resetView();
+                                    displayResults(store.getData());
+                                    break;
+                                case ACTION_SEND_DATA_S:
+                                    new AlertDialog.Builder(this)
+                                            .setTitle(R.string.successTitle)
+                                            .setMessage(store.getData().toString(this))
+                                            .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
+                                            .setCancelable(true)
+                                            .show();
+                                    // TODO: Don't treat shared prefs as database
+                                    SharedPrefUtil.clearTempData(this);
+                                    resetView();
+                                    break;
+                                case ACTION_SEND_DATA_F:
+                                    new AlertDialog.Builder(this)
+                                            .setTitle("Error : " + store.getError().getStatusCode())
+                                            .setMessage(store.getError().getErrorMessage())
+                                            .show();
+                                    break;
 
-        addSubscriptionToUnsubscribe(
-                mDataCollectionStore.observable()
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .filter(store -> ACTION_SEND_DATA_S.equals(store.getAction()) ||
-                                ACTION_SEND_DATA_F.equals(store.getAction()))
-                        .subscribe(store -> {
-                            if (store.getError() != null) {
-                                new AlertDialog.Builder(this)
-                                        .setTitle(R.string.successTitle)
-                                        .setMessage(store.getData().toString(this))
-                                        .setPositiveButton(getString(R.string.testAgain), (dialog, which) -> centerImage.callOnClick())
-                                        .setCancelable(true)
-                                        .show();
-
-                                // TODO: Don't treat shared prefs as database
-                                SharedPrefUtil.clearTempData(this);
-                                resetView();
-                            } else {
-                                new AlertDialog.Builder(this)
-                                    .setTitle("Error : " + store.getError().getStatusCode())
-                                    .setMessage(store.getError().getErrorMessage())
-                                    .show();
                             }
+
                         }, throwable -> resetView())
         );
     }
