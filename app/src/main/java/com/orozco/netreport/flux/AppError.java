@@ -25,4 +25,20 @@ public class AppError {
     public static AppError createHttp(int statusCode, int errorCode, String errorMessage) {
       return new AppError(statusCode, errorCode, errorMessage, false);
     }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public Boolean getNetwork() {
+        return isNetwork;
+    }
 }
