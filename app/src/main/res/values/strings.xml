@@ -6,4 +6,5 @@
   <string name="bandwidth">Bandwidth : </string>
   <string name="signal">Signal : </string>
   <string name="testAgain">Test Again</string>
+  <string name="facebook_app_id">replace_me</string>
 </resources>

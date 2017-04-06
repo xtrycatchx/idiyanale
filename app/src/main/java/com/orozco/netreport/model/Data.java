@@ -162,14 +162,5 @@ public class Data {
         return sb.toString();
     }
 
-    @Override
-    public String toString() {
-        return "Data {" +
-                "\nconnectivity=" + connectivity.getTypeName() +
-                "\noperator='" + operator + '\'' +
-                "\nimei='" + imei + '\'' +
-                "\nsignal='" + signal + '\'' +
-                "\nbandwidth='" + bandwidth + '\'' +
-                "\n}";
-    }
+
 }
