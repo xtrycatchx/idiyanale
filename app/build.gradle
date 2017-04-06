@@ -89,5 +89,7 @@ dependencies {
     compile 'io.reactivex:rxjava:1.1.6'
 
     compile 'com.skyfishjy.ripplebackground:library:1.0.1'
+    compile 'cn.pedant.sweetalert:library:1.3'
+
 
 }

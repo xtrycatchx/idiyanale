@@ -6,46 +6,51 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".ui.main.MainActivity"
->
+    tools:context=".ui.main.MainActivity">
 
-  <android.support.design.widget.AppBarLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:theme="@style/AppTheme.AppBarOverlay"
-  >
-    <!--<android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:popupTheme="@style/AppTheme.PopupOverlay"
-    />-->
-  </android.support.design.widget.AppBarLayout>
-
-  <RelativeLayout
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:padding="@dimen/margin_default"
-      app:layout_behavior="@string/appbar_scrolling_view_behavior"
-  >
-    <com.orozco.netreport.ui.main.MainView
-        android:id="@+id/main_view"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-    />
+        android:theme="@style/AppTheme.AppBarOverlay"/>
 
-  </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/main_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/margin_default"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+        <com.skyfishjy.library.RippleBackground
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:rb_color="#0099CC"
+            app:rb_duration="3000"
+            app:rb_radius="32dp"
+            app:rb_rippleAmount="4"
+            app:rb_scale="6">
 
+            <ImageView
+                android:id="@+id/centerImage"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/signal"/>
+        </com.skyfishjy.library.RippleBackground>
 
-  <!--<android.support.design.widget.FloatingActionButton
-      android:id="@+id/fab"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_gravity="bottom|end"
-      android:layout_margin="@dimen/fab_margin"
-      android:src="@android:drawable/ic_dialog_email"
-  />-->
+        <Button
+            android:id="@+id/reportBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="40dp"
+            android:background="@android:color/transparent"
+            android:text="@string/reportLabel"
+            android:textColor="#0099CC"
+            android:visibility="invisible"/>
+
+    </RelativeLayout>
 
 </android.support.design.widget.CoordinatorLayout>
