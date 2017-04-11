@@ -158,15 +158,7 @@ public class MainActivity extends BaseActivity {
             reportBtn.setVisibility(View.INVISIBLE);
             centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
             rippleBackground.startRippleAnimation();
-            new Thread(() -> {
-                try {
-                    // TODO: Don't do this
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                beginTest();
-            }).start();
+            runOnUiThreadIfAlive(this::beginTest, 1000);
         }
     }
 
