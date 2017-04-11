@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-import rx.Single;
+import rx.Observable;
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 12/2/17.
@@ -72,10 +72,10 @@ public class Sources {
         return signalStrength;
     }
 
-    // Okay this might be a valid single
+    // Okay this might be a valid observable
     // Should be subscribed on IO thread
-    public Single<String> bandwidth() {
-        return Single.create(sub -> {
+    public Observable<String> bandwidth() {
+        return Observable.create(sub -> {
             String rateValue = "";
             try {
                 String oneGBFile = "http://speedtest.tele2.net/1GB.zip";
@@ -107,7 +107,8 @@ public class Sources {
                 // please always handle error
                 sub.onError(e);
             } finally {
-                sub.onSuccess(rateValue);
+                sub.onNext(rateValue);
+                sub.onCompleted();
             }
         });
     }

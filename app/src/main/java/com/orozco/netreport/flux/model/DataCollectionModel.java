@@ -14,7 +14,6 @@ import com.orozco.netreport.post.api.RestAPI;
 
 import pl.charmas.android.reactivelocation.ReactiveLocationProvider;
 import rx.Observable;
-import rx.Single;
 import rx.schedulers.Schedulers;
 
 /**
@@ -24,6 +23,7 @@ public class DataCollectionModel {
     private final RestAPI mRestApi;
     private final Context mContext;
     private final Sources mSources;
+    Data currentData;
 
     public DataCollectionModel(Context context, RestAPI restApi, Sources sources) {
         mContext = context;
@@ -31,8 +31,8 @@ public class DataCollectionModel {
         mSources = sources;
     }
 
-    public Single<Data> executeNetworkTest() throws SecurityException {
-        Single<Connectivity> connectivitySingle = ReactiveNetwork.observeNetworkConnectivity(mContext).first().toSingle();
+    public Observable<Data> executeNetworkTest() throws SecurityException {
+        Observable<Connectivity> connectivityObservable = ReactiveNetwork.observeNetworkConnectivity(mContext).first();
         LocationRequest request = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setNumUpdates(1)
@@ -44,23 +44,21 @@ public class DataCollectionModel {
         String IMEI = mSources.imei();
         String signal = mSources.signal();
 
-        Data currentData = Data.newBuilder()
+        currentData = Data.newBuilder()
                 .withOperator(networkOperator)
                 .withDevice(device)
                 .withImei(IMEI)
                 .withSignal(signal)
                 .build();
 
-        Single<Location> locationSingle = locationProvider.getUpdatedLocation(request).first().toSingle();
-        Single<String> bandwidthSingle = mSources.bandwidth().subscribeOn(Schedulers.io());
-
-        return Single.zip(connectivitySingle, locationSingle, bandwidthSingle, (connectivity, location, bandwidth) ->
-                Data.newBuilder(currentData)
-                        .withConnectivity(connectivity)
-                        .withLocation(location)
-                        .withBandwidth(bandwidth)
-                        .build())
-                .onErrorReturn(throwable -> currentData); // do not be dependent on location and bandwidth, if it causes an error, still send some data
+        Observable<Location> locationObservable = locationProvider.getUpdatedLocation(request).first();
+        Observable<String> bandwidthObservable = mSources.bandwidth().subscribeOn(Schedulers.io());
+        return bandwidthObservable
+                .doOnNext(bandwidth -> currentData = Data.newBuilder(currentData).withBandwidth(bandwidth).build())
+                .flatMap(aIgnore -> connectivityObservable)
+                .doOnNext(connectivity -> currentData = Data.newBuilder(currentData).withConnectivity(connectivity).build())
+                .flatMap(aIgnore -> locationObservable)
+                .map(location -> currentData = Data.newBuilder(currentData).withLocation(location).build());
     }
 
     public Observable<Void> sendData(Data data) {

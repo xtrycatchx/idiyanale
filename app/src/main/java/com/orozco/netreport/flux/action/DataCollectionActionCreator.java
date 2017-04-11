@@ -46,7 +46,7 @@ public class DataCollectionActionCreator {
     }
 
     public void collectData() {
-        mModel.executeNetworkTest().toObservable()
+        mModel.executeNetworkTest()
                 .subscribe(data -> {
                     mDispatcher.dispatch(Action.create(ACTION_COLLECT_DATA_S, data));
                 }, throwable -> {
