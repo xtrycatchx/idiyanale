@@ -152,7 +152,16 @@ public class Data {
         }
         if(!TextUtils.isEmpty(getBandwidth())) {
             sb.append(context.getString(R.string.bandwidth));
-            sb.append(getBandwidth());
+            float bandwidth = Float.valueOf(getBandwidth().replace(" Kbps",""));
+            String bandwidthString;
+            if(bandwidth < 1024) {
+                bandwidthString = String.valueOf(bandwidth).concat(" Kbps");
+            }
+            else {
+                bandwidthString = String.valueOf(Math.round(bandwidth/1024)).concat(" Mbps");
+            }
+            sb.append(bandwidthString);
+
             sb.append("\n");
         }
         if(!TextUtils.isEmpty(getSignal())) {
