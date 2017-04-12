@@ -1,7 +1,6 @@
 package com.orozco.netreport.model;
 
 import android.content.Context;
-import android.net.TrafficStats;
 import android.os.Build;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
@@ -12,11 +11,10 @@ import android.telephony.CellSignalStrengthLte;
 import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.TelephonyManager;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-
+import fr.bmartel.speedtest.SpeedTestReport;
+import fr.bmartel.speedtest.SpeedTestSocket;
+import fr.bmartel.speedtest.inter.ISpeedTestListener;
+import fr.bmartel.speedtest.model.SpeedTestError;
 import rx.Observable;
 
 /**
@@ -75,41 +73,67 @@ public class Sources {
     // Okay this might be a valid observable
     // Should be subscribed on IO thread
     public Observable<String> bandwidth() {
+        SpeedTestSocket speedTestSocket = new SpeedTestSocket();
+
         return Observable.create(sub -> {
-            String rateValue = "";
-            try {
-                String oneGBFile = "http://mirror.pregi.net/centos/7/isos/x86_64/CentOS-7-x86_64-Everything-1611.iso";
-                URL url = new URL(oneGBFile);
+            // add a listener to wait for speedtest completion and progress
+            speedTestSocket.addSpeedTestListener(new ISpeedTestListener() {
 
-                InputStream is = url.openStream();
-                BufferedInputStream bis = new BufferedInputStream(is);
-                long startBytes = TrafficStats.getTotalRxBytes();
-                int size = 0;
-                byte[] buf = new byte[1024];
-                long startTime = System.currentTimeMillis();
-
-                // download 5000kb
-                while (size < 5000 && System.currentTimeMillis() - startTime < 15000) {
-                    bis.read(buf);
-                    size++;
+                @Override
+                public void onDownloadFinished(SpeedTestReport report) {
+                    // called when download is finished
+                    System.out.println("[DL FINISHED] rate in octet/s : " + report.getTransferRateOctet());
+                    System.out.println("[DL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
+                    sub.onNext((speedTestSocket.getLiveDownloadReport().getTransferRateBit().intValue() / 1024)  + " Kbps");
+                    sub.onCompleted();
                 }
 
-                long endTime = System.currentTimeMillis();
-                long endBytes = TrafficStats.getTotalRxBytes();
-                long totalTime = endTime - startTime;
-                long totalBytes = endBytes - startBytes;
-                double rate = Math.round(totalBytes * 8 / 1024 / ((double) totalTime / 1000));
+                @Override
+                public void onDownloadError(SpeedTestError speedTestError, String errorMessage) {
+                    // called when a download error occur
+                    sub.onError(new Throwable(errorMessage));
+                }
 
-                rateValue = String.valueOf(rate).concat(" Kbps");
+                @Override
+                public void onUploadFinished(SpeedTestReport report) {
+                    // called when an upload is finished
+                    System.out.println("[UL FINISHED] rate in octet/s : " + report.getTransferRateOctet());
+                    System.out.println("[UL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
+                }
 
-            } catch (IOException e) {
-                e.printStackTrace();
-                // please always handle error
-                sub.onError(e);
-            } finally {
-                sub.onNext(rateValue);
-                sub.onCompleted();
-            }
+                @Override
+                public void onUploadError(SpeedTestError speedTestError, String errorMessage) {
+                    // called when an upload error occur
+                }
+
+                @Override
+                public void onDownloadProgress(float percent, SpeedTestReport report) {
+                    // called to notify download progress
+                    if (percent >= 0.12) { // 0.12% of 7.7GB = 10MB
+                        speedTestSocket.forceStopTask();
+                    }
+                    System.out.println("[DL PROGRESS] progress : " + percent + "%");
+                    System.out.println("[DL PROGRESS] rate in octet/s : " + report.getTransferRateOctet());
+                    System.out.println("[DL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
+                }
+
+                @Override
+                public void onUploadProgress(float percent, SpeedTestReport report) {
+                    // called to notify upload progress
+                    System.out.println("[UL PROGRESS] progress : " + percent + "%");
+                    System.out.println("[UL PROGRESS] rate in octet/s : " + report.getTransferRateOctet());
+                    System.out.println("[UL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
+                }
+
+                @Override
+                public void onInterruption() {
+                    // triggered when forceStopTask is called
+                    sub.onNext((speedTestSocket.getLiveDownloadReport().getTransferRateBit().intValue() / 1024)  + " Kbps");
+                    sub.onCompleted();
+                }
+            });
+
+            speedTestSocket.startFtpFixedDownload("mirror.pregi.net", "/centos/7/isos/x86_64/CentOS-7-x86_64-Everything-1611.iso", 10000);
         });
     }
 }
