@@ -2,9 +2,11 @@ package com.orozco.netreport.ui.main;
 
 import android.app.AlertDialog;
 import android.graphics.Color;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
@@ -42,6 +44,7 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_F;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_COLLECT_DATA_S;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_SEND_DATA_F;
 import static com.orozco.netreport.flux.action.DataCollectionActionCreator.DataCollectionAction.ACTION_SEND_DATA_S;
@@ -54,13 +57,20 @@ public class MainActivity extends BaseActivity {
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000;
     private static final int PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001;
 
-    @Inject DataCollectionActionCreator mDataCollectionActionCreator;
-    @Inject DataCollectionStore mDataCollectionStore;
-    @Inject RestAPI restApi;
-    @BindView(R.id.main_view) RelativeLayout mainView;
-    @BindView(R.id.centerImage) ImageView centerImage;
-    @BindView(R.id.content) RippleBackground rippleBackground;
-    @BindView(R.id.reportBtn) Button reportBtn;
+    @Inject
+    DataCollectionActionCreator mDataCollectionActionCreator;
+    @Inject
+    DataCollectionStore mDataCollectionStore;
+    @Inject
+    RestAPI restApi;
+    @BindView(R.id.main_view)
+    RelativeLayout mainView;
+    @BindView(R.id.centerImage)
+    ImageView centerImage;
+    @BindView(R.id.content)
+    RippleBackground rippleBackground;
+    @BindView(R.id.reportBtn)
+    Button reportBtn;
     private SweetAlertDialog pDialog;
 
     private void requestCoarseLocationPermission() {
@@ -87,7 +97,7 @@ public class MainActivity extends BaseActivity {
         isConnected()
                 .subscribe(isConnected -> {
                     Data savedData = SharedPrefUtil.retrieveTempData(this);
-                    if(savedData != null) {
+                    if (savedData != null) {
                         postToServer(savedData);
                     }
                 }, throwable -> {
@@ -147,6 +157,9 @@ public class MainActivity extends BaseActivity {
                                             .setMessage(store.getError().getErrorMessage())
                                             .show();
                                     break;
+                                case ACTION_COLLECT_DATA_F:
+                                    resetView();
+                                    break;
 
                             }
 
@@ -187,10 +200,19 @@ public class MainActivity extends BaseActivity {
             return;
         }
 
-        if (!AccessRequester.isLocationEnabled(this)) {
-            runOnUiThread(() -> AccessRequester.requestLocationAccess(this));
-            endTest();
-            return;
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN) {
+            String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            if (!provider.contains(LocationManager.GPS_PROVIDER)) {
+                runOnUiThread(() -> AccessRequester.requestLocationAccess(this));
+                endTest();
+                return;
+            }
+        } else {
+            if (!AccessRequester.isLocationEnabled(this)) {
+                runOnUiThread(() -> AccessRequester.requestLocationAccess(this));
+                endTest();
+                return;
+            }
         }
 
         mDataCollectionActionCreator.collectData();
@@ -217,7 +239,7 @@ public class MainActivity extends BaseActivity {
     @OnClick(R.id.reportBtn)
     public void onReportSubmit() {
         Data data = SharedPrefUtil.retrieveTempData(this);
-        if(data != null) {
+        if (data != null) {
             postToServer(mDataCollectionStore.getData());
         }
     }
@@ -232,7 +254,7 @@ public class MainActivity extends BaseActivity {
     }
 
     // TODO: Can be improved
-    public Single<Boolean> isConnected()  {
+    public Single<Boolean> isConnected() {
         return Observable.fromCallable(() -> InetAddress.getByName(URI.create(RestAPI.BASE_URL).getHost()))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

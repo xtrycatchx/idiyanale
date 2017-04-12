@@ -29,7 +29,9 @@ public class DataCollectionStore extends Store<DataCollectionStore> {
     }
 
     private void updateData(Action action) {
-        data = (Data) action.data();
+        if (action.data() instanceof Data) {
+            data = (Data) action.data();
+        }
     }
 
     private void updateError(Action action) {
