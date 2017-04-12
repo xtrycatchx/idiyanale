@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import com.facebook.share.model.ShareHashtag;
 import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.widget.ShareDialog;
 import com.github.pwittchen.reactivewifi.AccessRequester;
@@ -125,6 +126,9 @@ public class MainActivity extends BaseActivity {
                                                                     .setImageUrl(Uri.parse("https://scontent.fmnl4-6.fna.fbcdn.net/v/t1.0-9/17796714_184477785394716_1700205285852495439_n.png?oh=40acf149ffe8dcc0e24e60af7f844514&oe=595D6465"))
                                                                     .setContentDescription(result)
                                                                     .setContentUrl(Uri.parse("https://bass.bnshosting.net/device"))
+                                                                    .setShareHashtag(new ShareHashtag.Builder()
+                                                                        .setHashtag("#BASSparaSaBayan")
+                                                                        .build())
                                                                     .build();
 
                                                             ShareDialog.show(MainActivity.this, linkContent);
