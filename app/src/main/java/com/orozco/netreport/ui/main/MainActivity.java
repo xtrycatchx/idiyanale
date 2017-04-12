@@ -3,6 +3,7 @@ package com.orozco.netreport.ui.main;
 import android.app.AlertDialog;
 import android.graphics.Color;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -13,6 +14,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import com.facebook.share.model.ShareHashtag;
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.widget.ShareDialog;
 import com.github.pwittchen.reactivewifi.AccessRequester;
 import com.orozco.netreport.R;
 import com.orozco.netreport.flux.action.DataCollectionActionCreator;
@@ -115,17 +119,34 @@ public class MainActivity extends BaseActivity {
                                     break;
                                 case ACTION_SEND_DATA_S:
                                     pDialog.setTitleText("Sent!")
-                                            .setContentText("Your data has been sent")
-                                            .setConfirmText("See my data")
-                                            .setConfirmClickListener(sweetAlertDialog -> {
-                                                sweetAlertDialog
-                                                        .setTitleText("Here's your data")
-                                                        .setConfirmText("Thanks! I'm done.")
-                                                        .setContentText(store.getData().toString())
-                                                        .setConfirmClickListener(SweetAlertDialog::dismissWithAnimation)
-                                                        .changeAlertType(SweetAlertDialog.NORMAL_TYPE);
-                                            })
-                                            .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
+                                        .setContentText("Your data has been sent")
+                                        .setConfirmText("See my results")
+                                        .setConfirmClickListener(sweetAlertDialog -> {
+                                            final String result = store.getData().toString(MainActivity.this);
+                                            sweetAlertDialog
+                                                    .setTitleText("Here's your data")
+                                                    .setCancelText("I'm Done")
+                                                    .setCancelClickListener(SweetAlertDialog::dismissWithAnimation)
+                                                    .setConfirmText("Share Results")
+                                                    .setContentText(result)
+                                                    .setConfirmClickListener(dialog->{
+                                                        if (ShareDialog.canShow(ShareLinkContent.class)) {
+                                                            ShareLinkContent linkContent = new ShareLinkContent.Builder()
+                                                                    .setContentTitle("My BASS Results")
+                                                                    .setImageUrl(Uri.parse("https://scontent.fmnl4-6.fna.fbcdn.net/v/t1.0-9/17796714_184477785394716_1700205285852495439_n.png?oh=40acf149ffe8dcc0e24e60af7f844514&oe=595D6465"))
+                                                                    .setContentDescription(result)
+                                                                    .setContentUrl(Uri.parse("https://bass.bnshosting.net/device"))
+                                                                    .setShareHashtag(new ShareHashtag.Builder()
+                                                                        .setHashtag("#BASSparaSaBayan")
+                                                                        .build())
+                                                                    .build();
+
+                                                            ShareDialog.show(MainActivity.this, linkContent);
+                                                        }
+                                                    })
+                                                    .changeAlertType(SweetAlertDialog.NORMAL_TYPE);
+                                        })
+                                        .changeAlertType(SweetAlertDialog.SUCCESS_TYPE);
                                     // TODO: Don't treat shared prefs as database
                                     SharedPrefUtil.clearTempData(this);
                                     resetView();

@@ -78,7 +78,7 @@ public class Sources {
         return Observable.create(sub -> {
             String rateValue = "";
             try {
-                String oneGBFile = "http://speedtest.tele2.net/1GB.zip";
+                String oneGBFile = "http://mirror.pregi.net/centos/7/isos/x86_64/CentOS-7-x86_64-Everything-1611.iso";
                 URL url = new URL(oneGBFile);
 
                 InputStream is = url.openStream();
