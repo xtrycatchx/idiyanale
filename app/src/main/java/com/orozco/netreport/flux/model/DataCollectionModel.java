@@ -43,12 +43,13 @@ public class DataCollectionModel {
         Device device = mSources.device();
         String IMEI = mSources.imei();
         String signal = mSources.signal();
-
+        String version = mSources.version();
         currentData = Data.newBuilder()
                 .withOperator(networkOperator)
                 .withDevice(device)
                 .withImei(IMEI)
                 .withSignal(signal)
+                .withVersion(version)
                 .build();
 
         Observable<Location> locationObservable = locationProvider.getUpdatedLocation(request).first();

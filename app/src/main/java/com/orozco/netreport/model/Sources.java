@@ -12,6 +12,8 @@ import android.telephony.CellSignalStrengthLte;
 import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.TelephonyManager;
 
+import com.orozco.netreport.BuildConfig;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +43,10 @@ public class Sources {
 
     public String imei() {
         return ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+    }
+
+    public String version() {
+        return BuildConfig.VERSION_NAME;
     }
 
 

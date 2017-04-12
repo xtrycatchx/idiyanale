@@ -21,12 +21,13 @@ public class Data {
     private String imei;
     private String signal;
     private String bandwidth;
+    private String version;
 
     private Data() {
         // prevent direct initialization
     }
 
-    public Data(Connectivity connectivity, Location location, String operator, Device device, String imei, String signal, String bandwidth) {
+    public Data(Connectivity connectivity, Location location, String operator, Device device, String imei, String signal, String bandwidth, String version) {
         this.connectivity = connectivity;
         this.location = location;
         this.operator = operator;
@@ -34,6 +35,7 @@ public class Data {
         this.imei = imei;
         this.signal = signal;
         this.bandwidth = bandwidth;
+        this.version = version;
     }
 
     private Data(Builder builder) {
@@ -44,6 +46,7 @@ public class Data {
         imei = builder.imei;
         signal = builder.signal;
         bandwidth = builder.bandwidth;
+        version = builder.version;
     }
 
     public static Builder newBuilder() {
@@ -59,6 +62,7 @@ public class Data {
         builder.imei = copy.imei;
         builder.signal = copy.signal;
         builder.bandwidth = copy.bandwidth;
+        builder.version = copy.version;
         return builder;
     }
 
@@ -91,6 +95,8 @@ public class Data {
         return bandwidth;
     }
 
+    public String getVersion() {return version; }
+
     public static final class Builder {
         private Connectivity connectivity;
         private Location location;
@@ -99,6 +105,7 @@ public class Data {
         private String imei;
         private String signal;
         private String bandwidth;
+        private String version;
 
         private Builder() {
         }
@@ -135,6 +142,10 @@ public class Data {
 
         public Builder withBandwidth(String val) {
             bandwidth = val;
+            return this;
+        }
+        public Builder withVersion(String val) {
+            version = val;
             return this;
         }
 
