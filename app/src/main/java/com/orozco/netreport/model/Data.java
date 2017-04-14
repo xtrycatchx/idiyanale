@@ -169,7 +169,8 @@ public class Data {
                 bandwidthString = String.valueOf(bandwidth).concat(" Kbps");
             }
             else {
-                bandwidthString = String.valueOf(Math.round(bandwidth/1024)).concat(" Mbps");
+
+                bandwidthString = String.valueOf(Math.round((bandwidth/1024)*100.0)/100.0).concat(" Mbps");
             }
             sb.append(bandwidthString);
 
