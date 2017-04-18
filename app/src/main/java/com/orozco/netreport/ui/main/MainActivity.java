@@ -13,6 +13,7 @@ import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.facebook.share.model.ShareHashtag;
 import com.facebook.share.model.ShareLinkContent;
@@ -67,6 +68,8 @@ public class MainActivity extends BaseActivity {
     RelativeLayout mainView;
     @BindView(R.id.centerImage)
     ImageView centerImage;
+    @BindView(R.id.reportText)
+    TextView buttonText;
     @BindView(R.id.content)
     RippleBackground rippleBackground;
     private SweetAlertDialog pDialog;
@@ -181,7 +184,7 @@ public class MainActivity extends BaseActivity {
         if (rippleBackground.isRippleAnimationRunning()) {
             endTest();
         } else {
-
+            buttonText.setVisibility(View.INVISIBLE);
             centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal_on));
             rippleBackground.startRippleAnimation();
             runOnUiThreadIfAlive(this::beginTest, 1000);
@@ -232,7 +235,7 @@ public class MainActivity extends BaseActivity {
     }
 
     public void resetView() {
-
+        buttonText.setVisibility(View.VISIBLE);
         rippleBackground.stopRippleAnimation();
         centerImage.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.signal));
     }

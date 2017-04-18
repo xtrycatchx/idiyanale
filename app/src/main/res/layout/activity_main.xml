@@ -37,8 +37,19 @@
                 android:layout_width="64dp"
                 android:layout_height="64dp"
                 android:layout_centerInParent="true"
-                android:src="@drawable/signal"/>
+                android:src="@drawable/signal" />
+            <TextView
+                android:id="@+id/reportText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/centerImage"
+                android:layout_marginTop="15dp"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:text="@string/reportLabel"
+                android:textColor="#0099CC" />
         </com.skyfishjy.library.RippleBackground>
+
 
 
 
