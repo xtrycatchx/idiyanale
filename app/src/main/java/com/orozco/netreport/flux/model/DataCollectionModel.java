@@ -6,7 +6,6 @@ import android.location.Location;
 import com.github.pwittchen.reactivenetwork.library.Connectivity;
 import com.github.pwittchen.reactivenetwork.library.ReactiveNetwork;
 import com.google.android.gms.location.LocationRequest;
-import com.google.gson.Gson;
 import com.orozco.netreport.model.Data;
 import com.orozco.netreport.model.Device;
 import com.orozco.netreport.model.Sources;
@@ -62,7 +61,7 @@ public class DataCollectionModel {
                 .map(location -> currentData = Data.newBuilder(currentData).withLocation(location).build());
     }
 
-    public Observable<Void> sendData(Data data) {
-        return mRestApi.record(new Gson().toJson(data));
+    public Observable<Data> sendData(Data data) {
+        return mRestApi.record(data);
     }
 }

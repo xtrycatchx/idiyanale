@@ -1,5 +1,7 @@
 package com.orozco.netreport.post.api;
 
+import com.orozco.netreport.model.Data;
+
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 import rx.Observable;
@@ -10,9 +12,9 @@ import rx.Observable;
 
 public interface RestAPI {
 
-    String BASE_URL = "https://bass.bnshosting.net/api/";
+    String BASE_URL = "https://bass.bnshosting.net/api/v2/";
 
     @POST("record")
-    Observable<Void> record(@Body String data);
+    Observable<Data> record(@Body Data data);
 
 }
