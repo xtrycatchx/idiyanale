@@ -21,8 +21,6 @@
 |  |model [String]
 |  |name [String]
 |  |release [String]
-| location [Object] |
-|  |release [String]
 | location [Object]
 |  |mAccuracy [Double] |
 |  |mAltitude [Double] |
