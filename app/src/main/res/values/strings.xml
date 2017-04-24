@@ -2,7 +2,7 @@
   <string name="app_name">BASS</string>
   <string name="reportLabel">TAP BUTTON TO START</string>
   <string name="successTitle">Success, Thank you</string>
-  <string name="provider">Provider : </string>
+  <string name="provider">SIM Network : </string>
   <string name="bandwidth">Bandwidth : </string>
   <string name="signal">Signal : </string>
   <string name="testAgain">Test Again</string>
