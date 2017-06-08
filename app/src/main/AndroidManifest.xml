@@ -24,7 +24,7 @@
             android:value="@integer/google_play_services_version" />
 
         <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
-        <provider android:authorities="com.facebook.app.FacebookContentProvider{replace_with_app_id}"
+        <provider android:authorities="com.facebook.app.FacebookContentProvider123"
             android:name="com.facebook.FacebookContentProvider"
             android:exported="true"/>
         <activity
