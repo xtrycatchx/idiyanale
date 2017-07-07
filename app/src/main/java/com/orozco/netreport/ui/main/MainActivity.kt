@@ -2,6 +2,7 @@ package com.orozco.netreport.ui.main
 
 import android.Manifest.permission.*
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Color
@@ -15,13 +16,23 @@ import android.support.v4.content.ContextCompat
 import android.view.View
 import butterknife.OnClick
 import cn.pedant.SweetAlert.SweetAlertDialog
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.Profile
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
 import com.facebook.share.model.ShareHashtag
 import com.facebook.share.model.ShareLinkContent
 import com.facebook.share.widget.ShareDialog
 import com.github.pwittchen.reactivewifi.AccessRequester
 import com.orozco.netreport.R
 import com.orozco.netreport.flux.action.DataCollectionActionCreator
+import com.orozco.netreport.flux.action.UserActionCreator
 import com.orozco.netreport.flux.store.DataCollectionStore
+import com.orozco.netreport.flux.store.UserStore
 import com.orozco.netreport.model.Data
 import com.orozco.netreport.post.api.RestAPI
 import com.orozco.netreport.ui.BaseActivity
@@ -31,8 +42,10 @@ import rx.Observable
 import rx.Single
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
+import timber.log.Timber
 import java.net.InetAddress
 import java.net.URI
+import java.util.*
 import javax.inject.Inject
 
 /**
@@ -43,7 +56,10 @@ class MainActivity : BaseActivity() {
 
     @Inject lateinit internal var mDataCollectionActionCreator: DataCollectionActionCreator
     @Inject lateinit internal var mDataCollectionStore: DataCollectionStore
+    @Inject lateinit internal var userActionCreator: UserActionCreator
+    @Inject lateinit internal var userStore: UserStore
     private var pDialog: SweetAlertDialog? = null
+    private val callbackManager: CallbackManager by lazy { CallbackManager.Factory.create() }
 
     private fun requestCoarseLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -76,66 +92,96 @@ class MainActivity : BaseActivity() {
         activityComponent.inject(this)
 
         initFlux()
+        LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onError(p0: FacebookException?) {
+            }
 
-        isConnected
-                .subscribe({
-                    val savedData = SharedPrefUtil.retrieveTempData(this)
-                    savedData?.let {
-                        postToServer(it)
-                    }
-                }) {
+            override fun onSuccess(p0: LoginResult?) {
+                val profile = Profile.getCurrentProfile()
+                userActionCreator.register(mapOf("username" to profile.id, "password" to profile.id))
+            }
 
-                }
+            override fun onCancel() {
+            }
+        } )
+
+        isConnected.subscribe({
+            SharedPrefUtil.retrieveTempData(this)?.let {
+                postToServer(it)
+            }
+        }, Timber::e)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        callbackManager.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun initFlux() {
-        addSubscriptionToUnsubscribe(
-                mDataCollectionStore.observable()
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe({ store ->
-                            when (store.action) {
-                                DataCollectionActionCreator.ACTION_COLLECT_DATA_S -> {
-                                    resetView()
-                                    postToServer(store.data)
-                                }
-                                DataCollectionActionCreator.ACTION_SEND_DATA_S -> {
-                                    val result = store.data?.toString(this@MainActivity)
-                                    pDialog?.setTitleText("Sent! Here's your data")
-                                            ?.setCancelText("I'm Done")
-                                            ?.setCancelClickListener({ it.dismissWithAnimation() })
-                                            ?.setConfirmText("Share Results")
-                                            ?.setContentText(result)
-                                            ?.setConfirmClickListener { dialog ->
-                                                if (ShareDialog.canShow(ShareLinkContent::class.java)) {
-                                                    val linkContent = ShareLinkContent.Builder()
-                                                            .setContentTitle("My BASS Results")
-                                                            .setImageUrl(Uri.parse("https://scontent.fmnl4-6.fna.fbcdn.net/v/t1.0-9/17796714_184477785394716_1700205285852495439_n.png?oh=40acf149ffe8dcc0e24e60af7f844514&oe=595D6465"))
-                                                            .setContentDescription(result)
-                                                            .setContentUrl(Uri.parse("https://bass.bnshosting.net/device"))
-                                                            .setShareHashtag(ShareHashtag.Builder()
-                                                                    .setHashtag("#BASSparaSaBayan")
-                                                                    .build())
-                                                            .build()
-
-                                                    ShareDialog.show(this@MainActivity, linkContent)
-                                                }
-                                            }
-                                            ?.changeAlertType(SweetAlertDialog.SUCCESS_TYPE)
-
-
-                                    // TODO: Don't treat shared prefs as database
-                                    SharedPrefUtil.clearTempData(this)
-                                    resetView()
-                                }
-                                DataCollectionActionCreator.ACTION_SEND_DATA_F -> AlertDialog.Builder(this)
-                                        .setTitle("Error : ${store.error?.statusCode}")
-                                        .setMessage(store.error?.errorMessage)
-                                        .show()
-                                DataCollectionActionCreator.ACTION_COLLECT_DATA_F -> resetView()
-                            }
-
-                        }) { throwable -> resetView() }
+        addSubscriptionToUnsubscribe(mDataCollectionStore.observable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ store ->
+                    when (store.action) {
+                        DataCollectionActionCreator.ACTION_COLLECT_DATA_S -> {
+                            resetView()
+                            postToServer(store.data)
+                        }
+                        DataCollectionActionCreator.ACTION_SEND_DATA_S -> showShareResultDialog()
+                        DataCollectionActionCreator.ACTION_SEND_DATA_F -> showErrorDialog()
+                        DataCollectionActionCreator.ACTION_COLLECT_DATA_F -> resetView()
+                    }
+                }) { resetView() }
         )
+
+        addSubscriptionToUnsubscribe(userStore.observable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    when(it.action) {
+                        UserActionCreator.ACTION_AUTHENTICATE_S -> prepareAndBeginTest()
+                        UserActionCreator.ACTION_REGISTER_S -> prepareAndBeginTest()
+                        UserActionCreator.ACTION_AUTHENTICATE_F -> resetView()
+                        UserActionCreator.ACTION_REGISTER_F -> {
+                            // register failed, maybe it is already registered? Try authenticating
+                            val profile = Profile.getCurrentProfile()
+                            userActionCreator.authenticate(mapOf("username" to profile.id, "password" to profile.id))
+                        }
+                    }
+                }))
+    }
+
+    private fun showShareResultDialog() {
+        val result = mDataCollectionStore.data?.toString(this@MainActivity)
+        pDialog?.setTitleText("Sent! Here's your data")
+                ?.setCancelText("I'm Done")
+                ?.setCancelClickListener({ it.dismissWithAnimation() })
+                ?.setConfirmText("Share Results")
+                ?.setContentText(result)
+                ?.setConfirmClickListener { dialog ->
+                    if (ShareDialog.canShow(ShareLinkContent::class.java)) {
+                        val linkContent = ShareLinkContent.Builder()
+                                .setContentTitle("My BASS Results")
+                                .setImageUrl(Uri.parse("https://scontent.fmnl4-6.fna.fbcdn.net/v/t1.0-9/17796714_184477785394716_1700205285852495439_n.png?oh=40acf149ffe8dcc0e24e60af7f844514&oe=595D6465"))
+                                .setContentDescription(result)
+                                .setContentUrl(Uri.parse("https://bass.bnshosting.net/device"))
+                                .setShareHashtag(ShareHashtag.Builder()
+                                        .setHashtag("#BASSparaSaBayan")
+                                        .build())
+                                .build()
+
+                        ShareDialog.show(this@MainActivity, linkContent)
+                    }
+                }
+                ?.changeAlertType(SweetAlertDialog.SUCCESS_TYPE)
+        // TODO: Don't treat shared prefs as database
+        SharedPrefUtil.clearTempData(this)
+        resetView()
+    }
+
+    private fun showErrorDialog() {
+        AlertDialog.Builder(this)
+                .setTitle("Error : ${mDataCollectionStore.error?.statusCode}")
+                .setMessage(mDataCollectionStore.error?.errorMessage)
+                .show()
     }
 
     @OnClick(R.id.centerImage)
@@ -143,11 +189,17 @@ class MainActivity : BaseActivity() {
         if (rippleBackground.isRippleAnimationRunning) {
             endTest()
         } else {
-            reportText.visibility = View.INVISIBLE
-            centerImage.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.signal_on))
-            rippleBackground.startRippleAnimation()
-            runOnUiThreadIfAlive(Runnable { this.beginTest() }, 1000)
+            LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile"))
         }
+    }
+
+    private fun prepareAndBeginTest() {
+        Answers.getInstance().logCustom(CustomEvent("Begin Test"))
+        reportText.visibility = View.INVISIBLE
+        centerImage.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.signal_on))
+        rippleBackground.startRippleAnimation()
+
+        runOnUiThreadIfAlive(Runnable { this.beginTest() }, 1000)
     }
 
     fun beginTest() {
