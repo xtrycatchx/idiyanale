@@ -15,6 +15,8 @@ import android.support.v4.content.ContextCompat
 import android.view.View
 import butterknife.OnClick
 import cn.pedant.SweetAlert.SweetAlertDialog
+import com.crashlytics.android.answers.Answers
+import com.crashlytics.android.answers.CustomEvent
 import com.facebook.share.model.ShareHashtag
 import com.facebook.share.model.ShareLinkContent
 import com.facebook.share.widget.ShareDialog
@@ -31,6 +33,7 @@ import rx.Observable
 import rx.Single
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
+import timber.log.Timber
 import java.net.InetAddress
 import java.net.URI
 import javax.inject.Inject
@@ -59,15 +62,14 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-
-        if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION || requestCode == PERMISSIONS_REQUEST_READ_PHONE_STATE) {
-
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                centerImage.performClick()
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION,
+            PERMISSIONS_REQUEST_READ_PHONE_STATE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    centerImage.performClick()
+                }
             }
-            return
         }
     }
 
@@ -77,65 +79,64 @@ class MainActivity : BaseActivity() {
 
         initFlux()
 
-        isConnected
-                .subscribe({
-                    val savedData = SharedPrefUtil.retrieveTempData(this)
-                    savedData?.let {
-                        postToServer(it)
-                    }
-                }) {
-
-                }
+        isConnected.subscribe({
+            SharedPrefUtil.retrieveTempData(this)?.let {
+                postToServer(it)
+            }
+        }, Timber::e)
     }
 
     private fun initFlux() {
-        addSubscriptionToUnsubscribe(
-                mDataCollectionStore.observable()
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe({ store ->
-                            when (store.action) {
-                                DataCollectionActionCreator.ACTION_COLLECT_DATA_S -> {
-                                    resetView()
-                                    postToServer(store.data)
-                                }
-                                DataCollectionActionCreator.ACTION_SEND_DATA_S -> {
-                                    val result = store.data?.toString(this@MainActivity)
-                                    pDialog?.setTitleText("Sent! Here's your data")
-                                            ?.setCancelText("I'm Done")
-                                            ?.setCancelClickListener({ it.dismissWithAnimation() })
-                                            ?.setConfirmText("Share Results")
-                                            ?.setContentText(result)
-                                            ?.setConfirmClickListener { dialog ->
-                                                if (ShareDialog.canShow(ShareLinkContent::class.java)) {
-                                                    val linkContent = ShareLinkContent.Builder()
-                                                            .setContentTitle("My BASS Results")
-                                                            .setImageUrl(Uri.parse("https://scontent.fmnl4-6.fna.fbcdn.net/v/t1.0-9/17796714_184477785394716_1700205285852495439_n.png?oh=40acf149ffe8dcc0e24e60af7f844514&oe=595D6465"))
-                                                            .setContentDescription(result)
-                                                            .setContentUrl(Uri.parse("https://bass.bnshosting.net/device"))
-                                                            .setShareHashtag(ShareHashtag.Builder()
-                                                                    .setHashtag("#BASSparaSaBayan")
-                                                                    .build())
-                                                            .build()
+        addSubscriptionToUnsubscribe(mDataCollectionStore.observable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ store ->
+                    when (store.action) {
+                        DataCollectionActionCreator.ACTION_COLLECT_DATA_S -> {
+                            resetView()
+                            postToServer(store.data)
+                        }
+                        DataCollectionActionCreator.ACTION_SEND_DATA_S -> showShareResultDialog()
+                        DataCollectionActionCreator.ACTION_SEND_DATA_F -> showErrorDialog()
+                        DataCollectionActionCreator.ACTION_COLLECT_DATA_F -> resetView()
+                    }
 
-                                                    ShareDialog.show(this@MainActivity, linkContent)
-                                                }
-                                            }
-                                            ?.changeAlertType(SweetAlertDialog.SUCCESS_TYPE)
-
-
-                                    // TODO: Don't treat shared prefs as database
-                                    SharedPrefUtil.clearTempData(this)
-                                    resetView()
-                                }
-                                DataCollectionActionCreator.ACTION_SEND_DATA_F -> AlertDialog.Builder(this)
-                                        .setTitle("Error : ${store.error?.statusCode}")
-                                        .setMessage(store.error?.errorMessage)
-                                        .show()
-                                DataCollectionActionCreator.ACTION_COLLECT_DATA_F -> resetView()
-                            }
-
-                        }) { throwable -> resetView() }
+                }) { resetView() }
         )
+    }
+
+    private fun showErrorDialog() {
+        AlertDialog.Builder(this)
+                .setTitle("Error : ${mDataCollectionStore.error?.statusCode}")
+                .setMessage(mDataCollectionStore.error?.errorMessage)
+                .show()
+    }
+
+    private fun showShareResultDialog() {
+        val result = mDataCollectionStore.data?.toString(this@MainActivity)
+        pDialog?.setTitleText("Sent! Here's your data")
+                ?.setCancelText("I'm Done")
+                ?.setCancelClickListener({ it.dismissWithAnimation() })
+                ?.setConfirmText("Share Results")
+                ?.setContentText(result)
+                ?.setConfirmClickListener { dialog ->
+                    if (ShareDialog.canShow(ShareLinkContent::class.java)) {
+                        val linkContent = ShareLinkContent.Builder()
+                                .setContentTitle("My BASS Results")
+                                .setImageUrl(Uri.parse("https://scontent.fmnl4-6.fna.fbcdn.net/v/t1.0-9/17796714_184477785394716_1700205285852495439_n.png?oh=40acf149ffe8dcc0e24e60af7f844514&oe=595D6465"))
+                                .setContentDescription(result)
+                                .setContentUrl(Uri.parse("https://bass.bnshosting.net/device"))
+                                .setShareHashtag(ShareHashtag.Builder()
+                                        .setHashtag("#BASSparaSaBayan")
+                                        .build())
+                                .build()
+
+                        ShareDialog.show(this@MainActivity, linkContent)
+                    }
+                }
+                ?.changeAlertType(SweetAlertDialog.SUCCESS_TYPE)
+        // TODO: Don't treat shared prefs as database
+        SharedPrefUtil.clearTempData(this)
+        resetView()
     }
 
     @OnClick(R.id.centerImage)
@@ -143,6 +144,7 @@ class MainActivity : BaseActivity() {
         if (rippleBackground.isRippleAnimationRunning) {
             endTest()
         } else {
+            Answers.getInstance().logCustom(CustomEvent("Begin Test"))
             reportText.visibility = View.INVISIBLE
             centerImage.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.signal_on))
             rippleBackground.startRippleAnimation()
@@ -195,6 +197,11 @@ class MainActivity : BaseActivity() {
     }
 
     fun postToServer(data: Data?) {
+        Answers.getInstance().logCustom(CustomEvent("Data Sent")
+                .putCustomAttribute("Operator", data?.operator)
+                .putCustomAttribute("Bandwidth", data?.bandwidth)
+                .putCustomAttribute("Signal", data?.signal)
+        )
         data?.let {
             SharedPrefUtil.saveTempData(this, it)
             pDialog = SweetAlertDialog(this, SweetAlertDialog.PROGRESS_TYPE)
