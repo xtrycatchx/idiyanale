@@ -5,7 +5,10 @@ import android.content.res.Resources
 
 import com.orozco.netreport.BASS
 import com.orozco.netreport.flux.Utils
+import com.orozco.netreport.flux.action.DataCollectionActionCreator
+import com.orozco.netreport.flux.model.DataCollectionModel
 import com.orozco.netreport.model.Sources
+import com.orozco.netreport.service.BASSJobCreator
 
 import dagger.Module
 import dagger.Provides
@@ -36,5 +39,12 @@ class ApplicationModule(private val application: BASS) {
     @PerApplication
     fun provideSources(context: Context): Sources {
         return Sources(context)
+    }
+
+    @Provides
+    @PerApplication
+    fun provideBASSJobCreator(dataCollectionActionCreator: DataCollectionActionCreator,
+                              dataCollectionModel: DataCollectionModel): BASSJobCreator {
+        return BASSJobCreator(dataCollectionActionCreator, dataCollectionModel)
     }
 }
