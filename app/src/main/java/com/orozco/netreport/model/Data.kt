@@ -2,8 +2,8 @@ package com.orozco.netreport.model
 
 import android.content.Context
 import android.location.Location
+import android.net.ConnectivityManager
 import android.text.TextUtils
-
 import com.github.pwittchen.reactivenetwork.library.Connectivity
 import com.orozco.netreport.R
 
@@ -28,6 +28,17 @@ data class Data(val connectivity: Connectivity? = null,
             sb.append(operator)
             sb.append("\n")
         }
+
+        if (connectivity != null) {
+            sb.append(context.getString(R.string.connection_type))
+            if (connectivity.type == ConnectivityManager.TYPE_WIFI) {
+                sb.append("WiFi")
+            } else {
+                sb.append("Mobile Data")
+            }
+            sb.append("\n")
+        }
+
         if (!TextUtils.isEmpty(bandwidth)) {
             sb.append(context.getString(R.string.bandwidth))
             val bandwidth = bandwidth.replace(" Kbps", "").toFloat()
