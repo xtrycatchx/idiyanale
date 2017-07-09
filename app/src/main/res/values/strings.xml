@@ -7,4 +7,5 @@
   <string name="signal">Signal : </string>
   <string name="testAgain">Test Again</string>
   <string name="facebook_app_id">replace_me</string>
+  <string name="fb_login_protocol_scheme">replace_me</string>
 </resources>
