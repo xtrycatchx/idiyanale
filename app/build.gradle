@@ -75,6 +75,7 @@ dependencies {
     compile "pl.charmas.android:android-reactive-location:0.10@aar"
     compile "com.google.android.gms:play-services-location:$playServicesVersion"
     compile "com.google.android.gms:play-services-places:$playServicesVersion"
+    compile "com.google.android.gms:play-services-gcm:$playServicesVersion"
 
     compile "com.github.pwittchen:reactivenetwork:0.8.0"
     compile "com.github.pwittchen:reactivewifi:0.2.0"
@@ -103,4 +104,7 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
         transitive = true;
     }
+
+    compile 'com.evernote:android-job:1.1.11'
+
 }
