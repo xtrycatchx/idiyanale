@@ -27,6 +27,7 @@ import com.orozco.netreport.flux.action.DataCollectionActionCreator
 import com.orozco.netreport.flux.store.DataCollectionStore
 import com.orozco.netreport.model.Data
 import com.orozco.netreport.post.api.RestAPI
+import com.orozco.netreport.service.job.DataCollectionJob
 import com.orozco.netreport.ui.BaseActivity
 import com.orozco.netreport.utils.SharedPrefUtil
 import kotlinx.android.synthetic.main.activity_main.*
@@ -153,6 +154,7 @@ class MainActivity : BaseActivity() {
             endTest()
         } else {
             Answers.getInstance().logCustom(CustomEvent("Begin Test"))
+            DataCollectionJob.scheduleJob()
             reportText.visibility = View.INVISIBLE
             centerImage.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.signal_on))
             rippleBackground.startRippleAnimation()
