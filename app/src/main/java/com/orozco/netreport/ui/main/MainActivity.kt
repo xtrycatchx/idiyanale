@@ -2,6 +2,7 @@ package com.orozco.netreport.ui.main
 
 import android.Manifest.permission.*
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Color
@@ -138,6 +139,13 @@ class MainActivity : BaseActivity() {
         // TODO: Don't treat shared prefs as database
         SharedPrefUtil.clearTempData(this)
         resetView()
+    }
+
+    @OnClick(R.id.btnMap)
+    fun onButtonMapsClicked() {
+
+        val intent = Intent(this@MainActivity, MapActivity::class.java)
+        startActivity(intent)
     }
 
     @OnClick(R.id.centerImage)
