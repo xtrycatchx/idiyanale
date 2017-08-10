@@ -12,7 +12,7 @@ repositories {
 // Manifest version information!
 def versionMajor = 4
 def versionMinor = 1
-def versionPatch = 0
+def versionPatch = 1
 def versionBuild = 0
 
 android {
