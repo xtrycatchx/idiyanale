@@ -39,8 +39,7 @@ class DataCollectionJob(val dataCollectionActionCreator: DataCollectionActionCre
 
         fun scheduleJob() {
             JobRequest.Builder(DataCollectionJob.TAG)
-//                    .setExact(1000)
-                    .setPeriodic(TimeUnit.MINUTES.toMillis(30))
+                    .setPeriodic(TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(5))
                     .setPersisted(true)
                     .setRequiredNetworkType(JobRequest.NetworkType.ANY)
                     .setUpdateCurrent(true)

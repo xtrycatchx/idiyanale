@@ -1,13 +1,18 @@
 package com.orozco.netreport.inject
 
+import android.content.Context
+import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.orozco.netreport.post.api.RestAPI
-
+import com.readystatesoftware.chuck.ChuckInterceptor
 import dagger.Module
 import dagger.Provides
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import rx.schedulers.Schedulers
+
+
 
 /**
  * YOYO HOLDINGS
@@ -19,10 +24,21 @@ import rx.schedulers.Schedulers
  */
 @Module
 class RestModule {
+
     @Provides
     @PerApplication
-    fun provideRetrofit(): Retrofit {
+    fun provideOkHttpClient(context: Context): OkHttpClient {
+        return OkHttpClient.Builder()
+                .addInterceptor(ChuckInterceptor(context))
+                .addInterceptor(StethoInterceptor())
+                .build()
+    }
+
+    @Provides
+    @PerApplication
+    fun provideRetrofit(client: OkHttpClient): Retrofit {
         return Retrofit.Builder()
+                .client(client)
                 .baseUrl(RestAPI.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io()))

@@ -23,11 +23,11 @@ data class Data(val connectivity: Connectivity? = null,
 
     fun toString(context: Context): String {
         val sb = StringBuilder()
-        if (!TextUtils.isEmpty(operator)) {
-            sb.append(context.getString(R.string.provider))
-            sb.append(operator)
-            sb.append("\n")
-        }
+//        if (!TextUtils.isEmpty(operator)) {
+//            sb.append(context.getString(R.string.provider))
+//            sb.append(operator)
+//            sb.append("\n")
+//        }
 
         if (connectivity != null) {
             sb.append(context.getString(R.string.connection_type))
@@ -57,5 +57,4 @@ data class Data(val connectivity: Connectivity? = null,
         }
         return sb.toString()
     }
-
 }

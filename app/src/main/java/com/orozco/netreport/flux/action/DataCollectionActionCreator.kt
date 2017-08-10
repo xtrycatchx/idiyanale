@@ -30,6 +30,7 @@ class DataCollectionActionCreator(private val mDispatcher: Dispatcher, private v
 
     fun sendData(data: Data) {
         mModel.sendData(data)
-                .subscribe({ mVoid -> mDispatcher.dispatch(Action.create(ACTION_SEND_DATA_S, data)) }) { throwable -> mDispatcher.dispatch(Action.create(ACTION_SEND_DATA_F, mUtils.getError(throwable))) }
+                .subscribe({ mVoid -> mDispatcher.dispatch(Action.create(ACTION_SEND_DATA_S, data)) }) { throwable ->
+                    mDispatcher.dispatch(Action.create(ACTION_SEND_DATA_F, mUtils.getError(throwable))) }
     }
 }

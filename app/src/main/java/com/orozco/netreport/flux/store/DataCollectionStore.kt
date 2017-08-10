@@ -43,15 +43,24 @@ class DataCollectionStore : Store<DataCollectionStore>() {
     }
 
     override fun onReceiveAction(action: Action) {
+        updateAction(action)
         when (action.type()) {
-            DataCollectionActionCreator.ACTION_COLLECT_DATA_S,
-            DataCollectionActionCreator.ACTION_COLLECT_DATA_F,
-            DataCollectionActionCreator.ACTION_SEND_DATA_S,
-            DataCollectionActionCreator.ACTION_SEND_DATA_F -> {
+            DataCollectionActionCreator.ACTION_COLLECT_DATA_S -> {
                 updateState()
                 updateData(action)
+                notifyStoreChanged(this)
+            }
+            DataCollectionActionCreator.ACTION_COLLECT_DATA_F -> {
                 updateError(action)
-                updateAction(action)
+                notifyStoreChanged(this)
+            }
+            DataCollectionActionCreator.ACTION_SEND_DATA_S -> {
+                updateState()
+                updateData(action)
+                notifyStoreChanged(this)
+            }
+            DataCollectionActionCreator.ACTION_SEND_DATA_F -> {
+                updateError(action)
                 notifyStoreChanged(this)
             }
         }

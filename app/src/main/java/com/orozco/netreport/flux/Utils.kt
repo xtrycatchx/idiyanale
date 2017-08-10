@@ -1,5 +1,6 @@
 package com.orozco.netreport.flux
 
+import com.crashlytics.android.Crashlytics
 import retrofit2.adapter.rxjava.HttpException
 
 /**
@@ -8,10 +9,9 @@ import retrofit2.adapter.rxjava.HttpException
 class Utils {
 
     fun getError(throwable: Throwable): AppError {
-        //        FirebaseCrash.logcat(Log.ERROR, "FLUX ERROR", throwable.getMessage());
-        //        FirebaseCrash.report(throwable);
+        Crashlytics.logException(throwable)
         if (throwable !is HttpException) {
-            return AppError.createNetwork(MSG_ERROR_NETWORK)
+            return AppError.createNetwork(MSG_ERROR_DEFAULT)
         }
         val response = throwable.response() ?: return AppError.createHttp(MSG_ERROR_DEFAULT)
         return AppError.createHttp(response.code(), -1, MSG_ERROR_DEFAULT)

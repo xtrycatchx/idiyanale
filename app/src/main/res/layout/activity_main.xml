@@ -60,7 +60,15 @@
             android:textColor="#0099CC"
             android:text="Map" />
 
-
+        <Button
+            android:id="@+id/btnHistory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/btnMap"
+            android:layout_alignParentTop="true"
+            android:background="@android:color/transparent"
+            android:textColor="#0099CC"
+            android:text="My Results" />
 
     </RelativeLayout>
 
