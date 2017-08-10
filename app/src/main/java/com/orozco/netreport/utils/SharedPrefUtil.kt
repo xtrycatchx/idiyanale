@@ -33,4 +33,16 @@ object SharedPrefUtil {
         val tempData = sharedPref.getString(DATA_KEY, "")
         return Gson().fromJson(tempData, Data::class.java)
     }
+
+    fun saveFlag(context: Context, key: String, value: Boolean) {
+        val sharedPref = context.getSharedPreferences("flags", Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.putBoolean(key, value)
+        editor.apply()
+    }
+
+    fun retrieveFlag(context: Context, key: String): Boolean {
+        val sharedPref = context.getSharedPreferences("flags", Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(key, false)
+    }
 }

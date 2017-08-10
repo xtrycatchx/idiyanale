@@ -15,8 +15,11 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.view.View
 import android.widget.Button
+import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.ImageView
 import butterknife.BindView
+import butterknife.OnCheckedChanged
 import butterknife.OnClick
 import cn.pedant.SweetAlert.SweetAlertDialog
 import co.mobiwise.materialintro.shape.Focus
@@ -58,6 +61,7 @@ class MainActivity : BaseActivity() {
 
     @BindView(R.id.centerImage) lateinit var centerImage: ImageView
     @BindView(R.id.btnMap) lateinit var map: Button
+    @BindView(R.id.enableAutoMeasure) lateinit var enableAutoMeasure: CheckBox
 
     @Inject lateinit internal var mDataCollectionActionCreator: DataCollectionActionCreator
     @Inject lateinit internal var mDataCollectionStore: DataCollectionStore
@@ -93,6 +97,8 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         activityComponent.inject(this)
 
+        initUi()
+
         showTutorial()
 
         initFlux()
@@ -104,9 +110,16 @@ class MainActivity : BaseActivity() {
         }, Crashlytics::logException)
     }
 
+    private fun initUi() {
+        enableAutoMeasure.isChecked = SharedPrefUtil.retrieveFlag(this, "auto_measure")
+    }
+
     private fun showTutorial() {
         if (!Once.beenDone(Once.THIS_APP_INSTALL, "tutorial_measure")) {
             showMeasureTutorial()
+        } else if (!Once.beenDone(Once.THIS_APP_SESSION, "tutorial_auto_measure") and
+                !SharedPrefUtil.retrieveFlag(this, "auto_measure")) {
+            showAutoMeasureTutorial()
         } else if (!Once.beenDone(Once.THIS_APP_INSTALL, "tutorial_map")) {
             showMapTutorial()
         }
@@ -120,7 +133,7 @@ class MainActivity : BaseActivity() {
                 .setFocusType(Focus.NORMAL)
                 .setTargetPadding(30)
                 .dismissOnTouch(true)
-                .setDelayMillis(100)
+                .setDelayMillis(0)
                 .enableFadeAnimation(true)
                 .performClick(false)
                 .setInfoText("To view measurement reports, click Map.")
@@ -152,6 +165,29 @@ class MainActivity : BaseActivity() {
                 .setUsageId(UUID.randomUUID().toString())
                 .setListener {
                     Once.markDone("tutorial_measure")
+                    showTutorial()
+                }
+                .show()
+    }
+
+    private fun showAutoMeasureTutorial() {
+        MaterialIntroView.Builder(this)
+                .enableDotAnimation(false)
+                .enableIcon(false)
+                .setFocusGravity(FocusGravity.CENTER)
+                .setFocusType(Focus.ALL)
+                .dismissOnTouch(true)
+                .setTargetPadding(30)
+                .setDelayMillis(0)
+                .enableFadeAnimation(true)
+                .performClick(false)
+                .setIdempotent(false)
+                .setInfoText("If you want to send us your measurements regularly, please check this box.")
+                .setShape(ShapeType.CIRCLE)
+                .setTarget(enableAutoMeasure)
+                .setUsageId(UUID.randomUUID().toString())
+                .setListener {
+                    Once.markDone("tutorial_auto_measure")
                     showTutorial()
                 }
                 .show()
@@ -243,6 +279,11 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    @OnCheckedChanged(R.id.enableAutoMeasure)
+    fun onEnabledMeasure(v: CompoundButton, isChecked: Boolean) {
+        SharedPrefUtil.saveFlag(this, "auto_measure", isChecked)
+    }
+
     fun beginTest() {
         val fineLocationPermissionNotGranted = ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
         val coarseLocationPermissionNotGranted = ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED
@@ -326,7 +367,6 @@ class MainActivity : BaseActivity() {
     }
 
     companion object {
-
         private val PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000
         private val PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001
     }

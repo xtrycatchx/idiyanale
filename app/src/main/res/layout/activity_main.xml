@@ -17,7 +17,6 @@
         android:id="@+id/main_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/margin_default"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <com.skyfishjy.library.RippleBackground
@@ -48,6 +47,16 @@
                 android:gravity="center"
                 android:text="@string/reportLabel"
                 android:textColor="#0099CC" />
+
+            <CheckBox
+                android:id="@+id/enableAutoMeasure"
+                android:padding="8dp"
+                android:text="Contribute my data automatically"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="16dp"
+                android:layout_alignParentBottom="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
         </com.skyfishjy.library.RippleBackground>
 
         <Button
