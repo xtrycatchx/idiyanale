@@ -182,11 +182,12 @@ class MainActivity : BaseActivity() {
                 .enableFadeAnimation(true)
                 .performClick(false)
                 .setIdempotent(false)
-                .setInfoText("If you want to send us your measurements regularly, please check this box.")
+                .setInfoText("If you want to send us your measurements regularly, please check this box. Let's check this for now to help us gather more data (You can uncheck it).")
                 .setShape(ShapeType.CIRCLE)
                 .setTarget(enableAutoMeasure)
                 .setUsageId(UUID.randomUUID().toString())
                 .setListener {
+                    enableAutoMeasure.isChecked = true
                     Once.markDone("tutorial_auto_measure")
                     showTutorial()
                 }
