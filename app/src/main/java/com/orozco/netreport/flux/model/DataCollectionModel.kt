@@ -6,10 +6,7 @@ import android.net.ConnectivityManager
 import com.github.pwittchen.reactivenetwork.library.ReactiveNetwork
 import com.google.android.gms.location.LocationRequest
 import com.orozco.netreport.core.Database
-import com.orozco.netreport.model.Data
-import com.orozco.netreport.model.History
-import com.orozco.netreport.model.RecordResponse
-import com.orozco.netreport.model.Sources
+import com.orozco.netreport.model.*
 import com.orozco.netreport.post.api.RestAPI
 
 import pl.charmas.android.reactivelocation.ReactiveLocationProvider
@@ -22,7 +19,20 @@ import rx.schedulers.Schedulers
 class DataCollectionModel(private val mContext: Context, private val mRestApi: RestAPI, private val mSources: Sources, private val database: Database) {
     @Throws(SecurityException::class)
     fun executeNetworkTest(): Observable<Data> {
-        val connectivityObservable = ReactiveNetwork.observeNetworkConnectivity(mContext).first()
+        val connectivityObservable = ReactiveNetwork.observeNetworkConnectivity(mContext).first().map {
+            return@map Connectivity(
+                    available = it.isAvailable,
+                    detailedState = it.detailedState.name,
+                    extraInfo = it.extraInfo,
+                    failover = it.isFailover,
+                    roaming = it.isRoaming,
+                    state = it.state.name,
+                    subType = it.subType,
+                    subTypeName = it.subTypeName,
+                    type = it.type,
+                    typeName = it.typeName
+            )
+        }
         val request = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setNumUpdates(1)
@@ -34,14 +44,26 @@ class DataCollectionModel(private val mContext: Context, private val mRestApi: R
         val IMEI = mSources.imei()
         val signal = mSources.signal()
         val version = mSources.version()
+        val networkInfo = mSources.getNetworkInfo()
         var currentData = Data(
                 operator = networkOperator,
                 device = device,
                 imei = IMEI,
                 signal = signal,
+                networkInfo = networkInfo,
                 version = version)
 
-        val locationObservable = locationProvider.getUpdatedLocation(request).first()
+        val locationObservable = locationProvider.getUpdatedLocation(request).first().map {
+            return@map Location(altitude = it.altitude,
+                    accuracy = it.accuracy.toDouble(),
+                    bearing = it.bearing.toDouble(),
+                    elapsedRealTimeNanos = it.elapsedRealtimeNanos,
+                    longitude = it.longitude,
+                    latitude = it.latitude,
+                    time = it.time,
+                    speed = it.speed.toDouble(),
+                    provider = it.provider)
+        }
         val bandwidthObservable = mSources.bandwidth().subscribeOn(Schedulers.io())
         return bandwidthObservable
                 .doOnNext { currentData = currentData.copy(bandwidth = it)}

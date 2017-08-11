@@ -1,10 +1,8 @@
 package com.orozco.netreport.model
 
 import android.content.Context
-import android.location.Location
 import android.net.ConnectivityManager
 import android.text.TextUtils
-import com.github.pwittchen.reactivenetwork.library.Connectivity
 import com.orozco.netreport.R
 
 
@@ -18,6 +16,7 @@ data class Data(val connectivity: Connectivity? = null,
                 val device: Device,
                 val imei: String,
                 val signal: String,
+                val networkInfo: NetworkInfo? = null,
                 val bandwidth: String = "0",
                 val version: String) {
 

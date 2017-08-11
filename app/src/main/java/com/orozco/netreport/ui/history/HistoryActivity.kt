@@ -15,7 +15,7 @@ import com.orozco.netreport.model.History
 import com.orozco.netreport.model.Models
 import com.orozco.netreport.ui.BaseActivity
 import io.requery.android.QueryRecyclerAdapter
-import io.requery.kotlin.upper
+import io.requery.kotlin.desc
 import io.requery.query.Result
 import kotlinx.android.synthetic.main.activity_history.*
 import javax.inject.Inject
@@ -26,14 +26,20 @@ class HistoryActivity : BaseActivity() {
 
     override val layoutRes: Int = R.layout.activity_history
 
+    private var adapter: HistoryAdapter = HistoryAdapter()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityComponent.inject(this)
         back.setOnClickListener { finish() }
         historyList.layoutManager = LinearLayoutManager(this)
-        val adapter = HistoryAdapter()
         historyList.adapter = adapter
         adapter.queryAsync()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        adapter.close()
     }
 
     inner class DataViewHolder(val v: View) : RecyclerView.ViewHolder(v) {
@@ -54,7 +60,7 @@ class HistoryActivity : BaseActivity() {
         }
 
         override fun performQuery(): Result<History> {
-            return (database.store() select(History::class) orderBy History::createdDate.upper()).get()
+            return (database.store() select(History::class) orderBy History::createdDate.desc()).get()
         }
 
 

@@ -131,8 +131,8 @@ dependencies {
     compile 'io.requery:requery-kotlin:1.4.0'
     compile 'io.requery:requery-android:1.4.0'
     kapt 'io.requery:requery-processor:1.4.0'
+    provided 'io.requery:requery-processor:1.1.0'
     compile 'io.reactivex.rxjava2:rxjava:2.1.2'
-
 
     debugCompile 'com.readystatesoftware.chuck:library:1.1.0'
     releaseCompile 'com.readystatesoftware.chuck:library-no-op:1.1.0'

@@ -7,11 +7,17 @@ import android.telephony.CellInfoGsm
 import android.telephony.CellInfoLte
 import android.telephony.CellInfoWcdma
 import android.telephony.TelephonyManager
+import android.telephony.gsm.GsmCellLocation
+import android.text.TextUtils
 import com.orozco.netreport.BuildConfig
 import rx.Observable
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.net.URL
+
+
+
+
 
 /**
  * Paul Sydney Orozco (@xtrycatchx) on 12/2/17.
@@ -35,6 +41,21 @@ class Sources(private val context: Context) {
         return BuildConfig.VERSION_NAME
     }
 
+    fun getNetworkInfo(): NetworkInfo? {
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val location = tm.cellLocation as GsmCellLocation?
+        location?.let {
+            val networkOperator = tm.networkOperator
+            var mcc = -1
+            var mnc = -1
+            if (!TextUtils.isEmpty(networkOperator)) {
+                mcc = Integer.parseInt(networkOperator.substring(0, 3))
+                mnc = Integer.parseInt(networkOperator.substring(3))
+            }
+            return NetworkInfo(cid = it.cid, lac = it.lac, mcc = mcc, mnc = mnc)
+        }
+        return null
+    }
 
     fun signal(): String {
         var signalStrength = ""
