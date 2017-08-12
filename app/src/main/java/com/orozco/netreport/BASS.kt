@@ -5,12 +5,14 @@ import android.content.Context
 import android.support.multidex.MultiDex
 import com.crashlytics.android.Crashlytics
 import com.evernote.android.job.JobManager
+import com.facebook.stetho.Stetho
 import com.orozco.netreport.inject.ApplicationComponent
 import com.orozco.netreport.inject.ApplicationModule
 import com.orozco.netreport.inject.DaggerApplicationComponent
 import com.orozco.netreport.inject.RestModule
 import com.orozco.netreport.service.BASSJobCreator
 import io.fabric.sdk.android.Fabric
+import jonathanfinerty.once.Once
 import javax.inject.Inject
 
 /**
@@ -30,6 +32,9 @@ class BASS : Application() {
 
     private fun init() {
         Fabric.with(this, Crashlytics())
+        Once.initialise(this)
+        Stetho.initializeWithDefaults(this)
+
         this.applicationComponent = DaggerApplicationComponent
                 .builder()
                 .applicationModule(ApplicationModule(this))

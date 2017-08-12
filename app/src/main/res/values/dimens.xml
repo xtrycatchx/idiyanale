@@ -15,4 +15,7 @@
   <dimen name="elevation_fab">6dp</dimen>
 
   <dimen name="fab_margin">@dimen/margin_default</dimen>
+
+  <dimen name="marker_image">50dp</dimen>
+  <dimen name="marker_padding">2dp</dimen>
 </resources>

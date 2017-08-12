@@ -3,22 +3,22 @@ package com.orozco.netreport.flux.store
 import com.orozco.netreport.flux.Action
 import com.orozco.netreport.flux.AppError
 import com.orozco.netreport.flux.Store
-import com.orozco.netreport.flux.action.DataCollectionActionCreator
-import com.orozco.netreport.model.Data
+import com.orozco.netreport.flux.action.LocationPointsActionCreator
+import com.orozco.netreport.model.LocationPoint
 import rx.Observable
 
 /**
  * @author A-Ar Andrew Concepcion
  */
-class DataCollectionStore : Store<DataCollectionStore>() {
-    var data: Data? = null
+class LocationPointsStore : Store<LocationPointsStore>() {
+    var locationPoints: List<LocationPoint> = listOf()
         private set
     var action: String? = null
         private set
     var error: AppError? = null
         private set
 
-    fun observableWithFilter(filter: String): Observable<DataCollectionStore> {
+    fun observableWithFilter(filter: String): Observable<LocationPointsStore> {
         return observable().filter { store -> filter == store.action }
     }
 
@@ -26,9 +26,10 @@ class DataCollectionStore : Store<DataCollectionStore>() {
         error = null
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun updateData(action: Action) {
-        if (action.data() is Data) {
-            data = action.data() as Data?
+        if (action.data() is List<*>) {
+            locationPoints = action.data() as List<LocationPoint>
         }
     }
 
@@ -45,21 +46,12 @@ class DataCollectionStore : Store<DataCollectionStore>() {
     override fun onReceiveAction(action: Action) {
         updateAction(action)
         when (action.type()) {
-            DataCollectionActionCreator.ACTION_COLLECT_DATA_S -> {
+            LocationPointsActionCreator.ACTION_GET_LOCATION_POINTS_S -> {
                 updateState()
                 updateData(action)
                 notifyStoreChanged(this)
             }
-            DataCollectionActionCreator.ACTION_COLLECT_DATA_F -> {
-                updateError(action)
-                notifyStoreChanged(this)
-            }
-            DataCollectionActionCreator.ACTION_SEND_DATA_S -> {
-                updateState()
-                updateData(action)
-                notifyStoreChanged(this)
-            }
-            DataCollectionActionCreator.ACTION_SEND_DATA_F -> {
+            LocationPointsActionCreator.ACTION_GET_LOCATION_POINTS_F -> {
                 updateError(action)
                 notifyStoreChanged(this)
             }

@@ -14,8 +14,19 @@ import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.view.View
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.CompoundButton
+import android.widget.ImageView
+import butterknife.BindView
+import butterknife.OnCheckedChanged
 import butterknife.OnClick
 import cn.pedant.SweetAlert.SweetAlertDialog
+import co.mobiwise.materialintro.shape.Focus
+import co.mobiwise.materialintro.shape.FocusGravity
+import co.mobiwise.materialintro.shape.ShapeType
+import co.mobiwise.materialintro.view.MaterialIntroView
+import com.crashlytics.android.Crashlytics
 import com.crashlytics.android.answers.Answers
 import com.crashlytics.android.answers.CustomEvent
 import com.facebook.share.model.ShareHashtag
@@ -29,15 +40,18 @@ import com.orozco.netreport.model.Data
 import com.orozco.netreport.post.api.RestAPI
 import com.orozco.netreport.service.job.DataCollectionJob
 import com.orozco.netreport.ui.BaseActivity
+import com.orozco.netreport.ui.history.HistoryActivity
+import com.orozco.netreport.ui.map.MapsActivity
 import com.orozco.netreport.utils.SharedPrefUtil
+import jonathanfinerty.once.Once
 import kotlinx.android.synthetic.main.activity_main.*
 import rx.Observable
 import rx.Single
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
-import timber.log.Timber
 import java.net.InetAddress
 import java.net.URI
+import java.util.*
 import javax.inject.Inject
 
 /**
@@ -46,9 +60,14 @@ import javax.inject.Inject
 class MainActivity : BaseActivity() {
     override val layoutRes: Int = R.layout.activity_main
 
+    @BindView(R.id.centerImage) lateinit var centerImage: ImageView
+    @BindView(R.id.btnMap) lateinit var map: Button
+    @BindView(R.id.enableAutoMeasure) lateinit var enableAutoMeasure: CheckBox
+
     @Inject lateinit internal var mDataCollectionActionCreator: DataCollectionActionCreator
     @Inject lateinit internal var mDataCollectionStore: DataCollectionStore
     private var pDialog: SweetAlertDialog? = null
+    private var isAlreadyRunningTest: Boolean = false
 
     private fun requestCoarseLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -69,7 +88,7 @@ class MainActivity : BaseActivity() {
             PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION,
             PERMISSIONS_REQUEST_READ_PHONE_STATE -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    centerImage.performClick()
+                    onCenterImageClicked()
                 }
             }
         }
@@ -79,13 +98,101 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         activityComponent.inject(this)
 
+        initUi()
+
+        showTutorial()
+
         initFlux()
 
         isConnected.subscribe({
             SharedPrefUtil.retrieveTempData(this)?.let {
                 postToServer(it)
             }
-        }, Timber::e)
+        }, Crashlytics::logException)
+    }
+
+    private fun initUi() {
+        enableAutoMeasure.isChecked = SharedPrefUtil.retrieveFlag(this, "auto_measure")
+    }
+
+    private fun showTutorial() {
+        if (!Once.beenDone(Once.THIS_APP_INSTALL, "tutorial_measure")) {
+            showMeasureTutorial()
+        } else if (!Once.beenDone(Once.THIS_APP_SESSION, "tutorial_auto_measure") and
+                !SharedPrefUtil.retrieveFlag(this, "auto_measure")) {
+            showAutoMeasureTutorial()
+        } else if (!Once.beenDone(Once.THIS_APP_INSTALL, "tutorial_map")) {
+            showMapTutorial()
+        }
+    }
+
+    private fun showMapTutorial() {
+        MaterialIntroView.Builder(this)
+                .enableDotAnimation(false)
+                .enableIcon(false)
+                .setFocusGravity(FocusGravity.CENTER)
+                .setFocusType(Focus.NORMAL)
+                .setTargetPadding(30)
+                .dismissOnTouch(true)
+                .setDelayMillis(0)
+                .enableFadeAnimation(true)
+                .performClick(false)
+                .setInfoText("To view measurement reports, click Map.")
+                .setShape(ShapeType.CIRCLE)
+                .setTarget(map)
+                .setIdempotent(false)
+                .setUsageId(UUID.randomUUID().toString())
+                .setListener {
+                    Once.markDone("tutorial_map")
+                }
+                .show()
+    }
+
+    private fun showMeasureTutorial() {
+        MaterialIntroView.Builder(this)
+                .enableDotAnimation(false)
+                .enableIcon(false)
+                .setFocusGravity(FocusGravity.CENTER)
+                .setFocusType(Focus.NORMAL)
+                .dismissOnTouch(true)
+                .setTargetPadding(30)
+                .setDelayMillis(100)
+                .enableFadeAnimation(true)
+                .performClick(false)
+                .setIdempotent(false)
+                .setInfoText("Hi There! To contribute to our data and see your network speed, please click the button in the center.")
+                .setShape(ShapeType.CIRCLE)
+                .setTarget(centerImage)
+                .setUsageId(UUID.randomUUID().toString())
+                .setListener {
+                    Once.markDone("tutorial_measure")
+                    showTutorial()
+                }
+                .show()
+    }
+
+    private fun showAutoMeasureTutorial() {
+        MaterialIntroView.Builder(this)
+                .enableDotAnimation(false)
+                .enableIcon(false)
+                .setFocusGravity(FocusGravity.CENTER)
+                .setFocusType(Focus.ALL)
+                .dismissOnTouch(true)
+                .setTargetPadding(30)
+                .setDelayMillis(0)
+                .enableFadeAnimation(true)
+                .performClick(false)
+                .setIdempotent(false)
+                .setInfoText("If you want to send us your measurements regularly, please check this box. Let's check this for now to help us gather more data (You can uncheck it).")
+                .setShape(ShapeType.CIRCLE)
+                .setTarget(enableAutoMeasure)
+                .setUsageId(UUID.randomUUID().toString())
+                .setListener {
+                    enableAutoMeasure.isChecked = true
+                    Once.markDone("tutorial_auto_measure")
+                    showTutorial()
+                }
+                .show()
     }
 
     private fun initFlux() {
@@ -98,10 +205,15 @@ class MainActivity : BaseActivity() {
                             postToServer(store.data)
                         }
                         DataCollectionActionCreator.ACTION_SEND_DATA_S -> showShareResultDialog()
-                        DataCollectionActionCreator.ACTION_SEND_DATA_F -> showErrorDialog()
-                        DataCollectionActionCreator.ACTION_COLLECT_DATA_F -> resetView()
+                        DataCollectionActionCreator.ACTION_SEND_DATA_F -> {
+                            pDialog?.dismiss()
+                            showErrorDialog()
+                        }
+                        DataCollectionActionCreator.ACTION_COLLECT_DATA_F -> {
+                            pDialog?.dismiss()
+                            resetView()
+                        }
                     }
-
                 }) { resetView() }
         )
     }
@@ -144,7 +256,13 @@ class MainActivity : BaseActivity() {
     @OnClick(R.id.btnMap)
     fun onButtonMapsClicked() {
 
-        val intent = Intent(this@MainActivity, MapActivity::class.java)
+        val intent = Intent(this@MainActivity, MapsActivity::class.java)
+        startActivity(intent)
+    }
+
+    @OnClick(R.id.btnHistory)
+    fun onHistoryClicked() {
+        val intent = Intent(this@MainActivity, HistoryActivity::class.java)
         startActivity(intent)
     }
 
@@ -153,26 +271,33 @@ class MainActivity : BaseActivity() {
         if (rippleBackground.isRippleAnimationRunning) {
             endTest()
         } else {
-            Answers.getInstance().logCustom(CustomEvent("Begin Test"))
-            DataCollectionJob.scheduleJob()
             reportText.visibility = View.INVISIBLE
             centerImage.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.signal_on))
             rippleBackground.startRippleAnimation()
-            runOnUiThreadIfAlive(Runnable { this.beginTest() }, 1000)
+            if (!isAlreadyRunningTest) {
+                isAlreadyRunningTest = true
+                runOnUiThreadIfAlive(Runnable { this.beginTest() }, 1000)
+            }
         }
+    }
+
+    @OnCheckedChanged(R.id.enableAutoMeasure)
+    fun onEnabledMeasure(v: CompoundButton, isChecked: Boolean) {
+        SharedPrefUtil.saveFlag(this, "auto_measure", isChecked)
     }
 
     fun beginTest() {
         val fineLocationPermissionNotGranted = ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
         val coarseLocationPermissionNotGranted = ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED
         val phoneStatePermissionNotGranted = ActivityCompat.checkSelfPermission(this, READ_PHONE_STATE) != PERMISSION_GRANTED
-
         if (fineLocationPermissionNotGranted && coarseLocationPermissionNotGranted) {
             requestCoarseLocationPermission()
+            isAlreadyRunningTest = false
             endTest()
             return
         }
         if (phoneStatePermissionNotGranted) {
+            isAlreadyRunningTest = false
             requestPhoneStatePermission()
             endTest()
             return
@@ -182,18 +307,23 @@ class MainActivity : BaseActivity() {
             val provider = Settings.Secure.getString(contentResolver, Settings.Secure.LOCATION_PROVIDERS_ALLOWED)
             if (!provider.contains(LocationManager.GPS_PROVIDER)) {
                 runOnUiThread { AccessRequester.requestLocationAccess(this) }
+                isAlreadyRunningTest = false
                 endTest()
                 return
             }
         } else {
             if (!AccessRequester.isLocationEnabled(this)) {
                 runOnUiThread { AccessRequester.requestLocationAccess(this) }
+                isAlreadyRunningTest = false
                 endTest()
                 return
             }
         }
 
         mDataCollectionActionCreator!!.collectData()
+        isAlreadyRunningTest = false
+        Answers.getInstance().logCustom(CustomEvent("Begin Test"))
+        DataCollectionJob.scheduleJob()
     }
 
     fun endTest() {
@@ -239,8 +369,7 @@ class MainActivity : BaseActivity() {
     }
 
     companion object {
-
-        private val PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000
+        val PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000
         private val PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001
     }
 }

@@ -5,6 +5,7 @@ import com.evernote.android.job.JobRequest
 import com.orozco.netreport.flux.action.DataCollectionActionCreator
 import com.orozco.netreport.flux.model.DataCollectionModel
 import com.orozco.netreport.model.Data
+import com.orozco.netreport.utils.SharedPrefUtil
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit
 class DataCollectionJob(val dataCollectionActionCreator: DataCollectionActionCreator, val dataCollectionModel: DataCollectionModel) : Job() {
 
     override fun onRunJob(params: Params): Job.Result {
+        if (!SharedPrefUtil.retrieveFlag(context, "auto_measure")) return Job.Result.SUCCESS
         var data: Data?
         try {
             data = dataCollectionModel.executeNetworkTest().toBlocking().toFuture().get()
@@ -39,8 +41,7 @@ class DataCollectionJob(val dataCollectionActionCreator: DataCollectionActionCre
 
         fun scheduleJob() {
             JobRequest.Builder(DataCollectionJob.TAG)
-//                    .setExact(1000)
-                    .setPeriodic(TimeUnit.MINUTES.toMillis(30))
+                    .setPeriodic(TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(5))
                     .setPersisted(true)
                     .setRequiredNetworkType(JobRequest.NetworkType.ANY)
                     .setUpdateCurrent(true)
