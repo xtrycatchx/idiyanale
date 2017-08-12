@@ -43,7 +43,7 @@ android {
 
     buildTypes {
         debug {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt')
             proguardFiles fileTree(dir: 'proguard-rules', include: ['*.pro']).asList().toArray()
         }
@@ -138,4 +138,6 @@ dependencies {
     releaseCompile 'com.readystatesoftware.chuck:library-no-op:1.1.0'
     compile 'com.facebook.stetho:stetho:1.5.0'
     compile 'com.facebook.stetho:stetho-okhttp3:1.5.0'
+
+    compile 'com.google.maps.android:android-maps-utils:0.5+'
 }

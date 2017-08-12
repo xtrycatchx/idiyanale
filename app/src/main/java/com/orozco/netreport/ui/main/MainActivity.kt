@@ -41,6 +41,7 @@ import com.orozco.netreport.post.api.RestAPI
 import com.orozco.netreport.service.job.DataCollectionJob
 import com.orozco.netreport.ui.BaseActivity
 import com.orozco.netreport.ui.history.HistoryActivity
+import com.orozco.netreport.ui.map.MapsActivity
 import com.orozco.netreport.utils.SharedPrefUtil
 import jonathanfinerty.once.Once
 import kotlinx.android.synthetic.main.activity_main.*
@@ -255,7 +256,7 @@ class MainActivity : BaseActivity() {
     @OnClick(R.id.btnMap)
     fun onButtonMapsClicked() {
 
-        val intent = Intent(this@MainActivity, MapActivity::class.java)
+        val intent = Intent(this@MainActivity, MapsActivity::class.java)
         startActivity(intent)
     }
 
@@ -368,7 +369,7 @@ class MainActivity : BaseActivity() {
     }
 
     companion object {
-        private val PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000
+        val PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1000
         private val PERMISSIONS_REQUEST_READ_PHONE_STATE = 1001
     }
 }

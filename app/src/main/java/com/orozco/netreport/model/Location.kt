@@ -8,7 +8,7 @@ data class Location(
         val accuracy: Double,
         val altitude: Double,
         val bearing: Double,
-        val elapsedRealTimeNanos: Long,
+        val elapsedRealtimeNanos: Long,
         val latitude: Double,
         val longitude: Double,
         val speed: Double,

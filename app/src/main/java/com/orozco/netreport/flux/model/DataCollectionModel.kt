@@ -2,13 +2,11 @@ package com.orozco.netreport.flux.model
 
 import android.content.Context
 import android.net.ConnectivityManager
-
 import com.github.pwittchen.reactivenetwork.library.ReactiveNetwork
 import com.google.android.gms.location.LocationRequest
 import com.orozco.netreport.core.Database
 import com.orozco.netreport.model.*
 import com.orozco.netreport.post.api.RestAPI
-
 import pl.charmas.android.reactivelocation.ReactiveLocationProvider
 import rx.Observable
 import rx.schedulers.Schedulers
@@ -57,7 +55,7 @@ class DataCollectionModel(private val mContext: Context, private val mRestApi: R
             return@map Location(altitude = it.altitude,
                     accuracy = it.accuracy.toDouble(),
                     bearing = it.bearing.toDouble(),
-                    elapsedRealTimeNanos = it.elapsedRealtimeNanos,
+                    elapsedRealtimeNanos = it.elapsedRealtimeNanos,
                     longitude = it.longitude,
                     latitude = it.latitude,
                     time = it.time,
@@ -74,13 +72,16 @@ class DataCollectionModel(private val mContext: Context, private val mRestApi: R
     }
 
     fun sendData(data: Data): Observable<RecordResponse> {
-        database.store().insert(
-                History(operator = data.operator,
-                        signal = data.signal,
-                        bandwidth = data.bandwidth,
-                        connectionType = if (data.connectivity?.type == ConnectivityManager.TYPE_WIFI) "wifi" else "mobile data",
-                        createdDate = System.currentTimeMillis()))
-                .subscribe()
-        return mRestApi.record(data)
+
+        return mRestApi.record(data).doOnNext {
+            database.store().upsert(
+                    History(testId = it.id,
+                            operator = data.operator,
+                            signal = data.signal,
+                            bandwidth = data.bandwidth,
+                            connectionType = if (data.connectivity?.type == ConnectivityManager.TYPE_WIFI) "wifi" else "mobile data",
+                            createdDate = System.currentTimeMillis()))
+                    .subscribe()
+        }
     }
 }
